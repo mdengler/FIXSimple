@@ -1,0 +1,177 @@
+digraph FIX_Session_Level_State_Matrix {
+    //
+    label="FIXT Session Level State Matrix"
+    labelloc="t";
+    //
+    //defaults
+    //
+    compound=true;
+    bgcolor="transparent";
+    fontname="sans";
+    node [fontname="sans"];
+    edge [fontname="sans"];
+    //
+    state_01 [label="Disconnected - No Connection Today"];
+    // Currently disconnected, have not attempted to establish a
+    // connection “today”, and no MsgSeqNum have been consumed (next
+    // connection “today” will start at MsgSeqNum of 1)
+    //
+    state_02 [label="Disconnected - Connection Today"];
+    // Currently disconnected, have attempted to establish a
+    // connection “today” and thus MsgSeqNum have been consumed (next
+    // connection “today” will start at MsgSeqNum of (last + 1) )
+    //
+    state_03_INI [label="Detect Broken Network"];
+    // While connected, detect a broken network connection (e.g. TCP
+    // socket closed). Disconnect the network connection and
+    // “shutdown” configuration for this session.
+    //
+    state_04_ACC [label="Awaiting Connection"];
+    // Session acceptor Logon awaiting network connection from
+    // counterparty
+    //
+    state_05_INI [label="Initiate Connection"];
+    // Session initiator Logon establishing network connection with
+    // counterparty
+    //
+    state_06_ACC [label="Network Connection Established (at Acceptor)"];
+    // Network connection established between both parties (Acceptor)
+    //
+    state_06_INI [label="Network Connection Established (at Initiator)"];
+    // Network connection established between both parties (Initiator)
+    //
+    state_07_INI [label="Initiation Logon Sent"];
+    // Session initiator Logon send Logon message.
+    //
+    state_08_ACC [label="Initiation Logon Received"];
+    // Session acceptor Logon receive counterparty’s Logon message.
+    //
+    state_09_ACC [label="Initiation Logon Response"];
+    // Session acceptor Logon respond to counterparty’s Logon message
+    // with Logon message to handshake
+    //
+    state_10 [label="Handle ResendRequest"];
+    // Receive and respond to counterparty’s ResendRequest sending
+    // requested messages and/or SequenceReset-Gap Fill messages for
+    // the range of MsgSeqNum requested. Updated to include rejecting
+    // Resend Request received with MsgSeqNum that is <= LastSeqNum
+    // processed.
+    //
+    state_11_INI [label="Receive MsgSeqNum Too High (at Initiator)"];
+    state_11_ACC [label="Receive MsgSeqNum Too High (at Acceptor)"];
+    // Receive too high of MsgSeqNum from counterparty, queue message,
+    // and send ResendRequest
+    //
+    state_12_INI [label="Awaiting/Processing Response to ResendRequest (at Initiator)"];
+    state_12_ACC [label="Awaiting/Processing Response to ResendRequest (at Acceptor)"];
+    // Process requested MsgSeqNum PossDupFlag=Y resent messages
+    // and/or SequenceReset-Gap Fill messages from counterparty. Queue
+    // incoming messages with MsgSeqNum too high
+    //
+    state_13 [label="No messages received in Interval"];
+    // No inbound messages (non-garbled) received in (HeartBeatInt +
+    // “reasonable period of time”), send TestRequest
+    //
+    state_14 [label="Awaiting/Processing Response to TestRequest"];
+    // Process inbound messages. Reset heart beat interval-related
+    // timer when ANY inbound message (non-garbled) is received
+    //
+    state_15 [label="Receive Logout message"];
+    // Receive Logout message from counterparty initiating
+    // logout/disconnect. If MsgSeqNum too high, send
+    // ResendRequest. If sent, wait a reasonable period of time for
+    // complete response to ResendRequest. Note that depending upon
+    // the reason for the Logout, the counterparty may be unable to
+    // fulfill the request. Send Logout message as response and wait a
+    // reasonable period of time for counterpaty to disconnect the
+    // network connection. Note counterparty may send a ResendRequest
+    // message if Logout message response has MsgSeqNum too high and
+    // then reinitiate the Logout process.
+    //
+    state_16_INI [label="Initiate Logout Process (at (original) Initiator)"];
+    state_16_ACC [label="Initiate Logout Process (at Acceptor)"];
+    // Identify condition or reason to gracefully disconnect (e.g. end
+    // of “day”, no response after multiple TestRequest messages, too
+    // low MsgSeqNum, etc.). Send Logout message to counterparty. Wait
+    // a reasonable period of time for Logout response. During this
+    // time handle “new” inbound messages and/or ResendRequest if
+    // possible. Note that some logout/termination conditions (e.g.
+    // loss of database/message safe-store) may require immediate
+    // termination of the network connection following the initial
+    // send of the Logout message. Disconnect the network connection
+    // and “shutdown” configuration for this session.
+    //
+    state_17_INI [label="Active/Normal Session (at Initiator)"];
+    state_17_ACC [label="Active/Normal Session (at Acceptor)"];
+    // Network connection established, Logon message exchange
+    // successfully completed, inbound and outbound MsgSeqNum are in
+    // sequence as expected, and Heartbeat or other messages are
+    // received within (HeartBeatInt + “reasonable period of time”).
+    //
+    state_18_INI [label="Waiting Logon ack"];
+    // Session initiator waiting for session acceptor to send back
+    // Logon ACK.
+    //
+    //
+    Start [label="Start"];
+    //
+//    subgraph clusterInitiatorLogin {
+//        label="Initiator Login";
+        //
+        // From FIX Logon Process State Transition Diagram
+        //
+        //
+        Start -> state_01;
+        Start -> state_02;
+        //
+        state_01 -> state_05_INI [label="Connect (TCP SYN)"];
+        state_01 -> state_03_INI [label="(Possible)"];
+        //
+        state_02 -> state_05_INI [label="Connect (TCP SYN)"];
+        state_02 -> state_03_INI [label="(Possible)"];
+        //
+        //
+        state_05_INI -> state_06_INI [label="Accept (receive TCP ACK)"];
+        //
+        state_06_INI -> state_07_INI [label="Initiate Logon (send Logon Message)"];
+        //
+        state_07_INI -> state_18_INI;
+        //
+        state_18_INI -> state_16_INI [label="(Possible, e.g., if MsgSeqNum too low)"];
+        state_18_INI -> state_17_INI [label="(Possible)"];
+        //
+        // At many points we can get MsgSeqNum too high
+        state_17_INI -> state_11_INI [label="(Possible)"];
+        //
+        state_11_INI -> state_12_INI;
+        //
+        state_12_INI -> state_17_INI [label="(Possible)"];
+        state_12_INI -> state_11_INI [label="(Possible)"];
+        //
+//    }
+    //
+//    subgraph clusterAcceptorLogin {
+//        label="Acceptor Login";
+        //
+        // From FIX Logon Process State Transition Diagram
+        //
+        Start -> state_04_ACC;
+        //
+        state_04_ACC -> state_06_ACC [label="Accept Connection (send TCP ACK)"];
+        //
+        state_06_ACC -> state_08_ACC [label="Receive Intiation Logon (receive Logon Message"];
+        //
+        state_08_ACC -> state_09_ACC [label="Send Initiation Logon Response (send Logon Message (ACK))"];
+        state_08_ACC -> state_16_ACC [label="(Possible, e.g., if MsgSeqNum too low)"];
+        state_08_ACC -> state_11_ACC [label="(Possible)"];
+        state_11_ACC -> state_09_ACC [label="Send ResendRequest"];
+        //
+        state_09_ACC -> state_12_ACC;
+        //
+        state_12_ACC -> state_17_ACC [label="(Possible)"];
+        state_12_ACC -> state_09_ACC [label="(Possible)"];
+        //
+//    }
+//
+// TODO: Logout process
+}
