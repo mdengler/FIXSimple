@@ -1,0 +1,6282 @@
+FINANCIAL INFORMATION
+EXCHANGE PROTOCOL
+(FIX)
+Version 1.1 Errata
+
+FIX SESSION PROTOCOL
+
+March 2008
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+DISCLAIMER
+THE INFORMATION CONTAINED HEREIN AND THE FINANCIAL INFORMATION EXCHANGE
+PROTOCOL (COLLECTIVELY, THE "FIX PROTOCOL") ARE PROVIDED "AS IS" AND NO PERSON OR
+ENTITY ASSOCIATED WITH THE FIX PROTOCOL MAKES ANY REPRESENTATION OR WARRANTY,
+EXPRESS OR IMPLIED, AS TO THE FIX PROTOCOL (OR THE RESULTS TO BE OBTAINED BY THE USE
+THEREOF) OR ANY OTHER MATTER AND EACH SUCH PERSON AND ENTITY SPECIFICALLY
+DISCLAIMS ANY WARRANTY OF ORIGINALITY, ACCURACY, COMPLETENESS, MERCHANTABILITY
+OR FITNESS FOR A PARTICULAR PURPOSE. SUCH PERSONS AND ENTITIES DO NOT WARRANT
+THAT THE FIX PROTOCOL WILL CONFORM TO ANY DESCRIPTION THEREOF OR BE FREE OF
+ERRORS. THE ENTIRE RISK OF ANY USE OF THE FIX PROTOCOL IS ASSUMED BY THE USER.
+
+NO PERSON OR ENTITY ASSOCIATED WITH THE FIX PROTOCOL SHALL HAVE ANY LIABILITY FOR
+DAMAGES OF ANY KIND ARISING IN ANY MANNER OUT OF OR IN CONNECTION WITH ANY USER'S
+USE OF (OR ANY INABILITY TO USE) THE FIX PROTOCOL, WHETHER DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL OR CONSEQUENTIAL (INCLUDING, WITHOUT LIMITATION, LOSS OF DATA,
+LOSS OF USE, CLAIMS OF THIRD PARTIES OR LOST PROFITS OR REVENUES OR OTHER ECONOMIC
+LOSS), WHETHER IN TORT (INCLUDING NEGLIGENCE AND STRICT LIABILITY), CONTRACT OR
+OTHERWISE, WHETHER OR NOT ANY SUCH PERSON OR ENTITY HAS BEEN ADVISED OF, OR
+OTHERWISE MIGHT HAVE ANTICIPATED THE POSSIBILITY OF, SUCH DAMAGES.
+
+No proprietary or ownership interest of any kind is granted with respect to the FIX Protocol (or any rights therein),
+except as expressly set by FIX Protocol Limited's Copyright and Acceptable Use Policy.
+
+© Copyright 2003-2008 FIX Protocol Limited, all rights reserved
+
+REPRODUCTION
+FIX Protocol Limited grants permission to print in hard copy form or reproduce the FIX Protocol specification in its
+entirety provided that the duplicated pages retain the “Copyright FIX Protocol Limited” statement at the bottom of
+the page.
+
+Portions of the FIX Protocol specification may be extracted or cited in other documents (such as a document which
+describes one’s implementation of the FIX Protocol) provided that one reference the origin of the FIX Protocol
+specification (http://www.fixprotocol.org) and that the specification itself is “Copyright FIX Protocol Limited”.
+FIX Protocol Limited claims no intellectual property over one’s implementation (programming code) of an
+application which implements the behavior and details from the FIX Protocol specification.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 2 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Contents – FIX Session Protocol
+INTRODUCTION .......................................................................................................................................................5
+TRANSMITTING FIXML OR OTHER XML-BASED CONTENT .....................................................................5
+FIX MESSAGE DELIVERY......................................................................................................................................5
+SEQUENCE NUMBERS: ................................................................................................................................................5
+HEARTBEATS:.............................................................................................................................................................6
+ORDERED MESSAGE PROCESSING: .............................................................................................................................6
+POSSIBLE DUPLICATES: ..............................................................................................................................................6
+POSSIBLE RESENDS: ...................................................................................................................................................6
+DATA INTEGRITY:.......................................................................................................................................................6
+MESSAGE ACKNOWLEDGMENT: .................................................................................................................................7
+ENCRYPTION: .............................................................................................................................................................7
+SESSION PROTOCOL ..............................................................................................................................................8
+APPLICATION VERSION INDEPENDENCE .....................................................................................................................8
+Default Application Version Identification............................................................................................................8
+Extension Pack Support.........................................................................................................................................9
+Extension Pack Backround .................................................................................................................................................. 9
+Use of Extension Packs ....................................................................................................................................................... 9
+
+Custom Application Version Support ..................................................................................................................10
+LOGON .....................................................................................................................................................................10
+MESSAGE EXCHANGE ...............................................................................................................................................11
+LOGOUT ...................................................................................................................................................................11
+MESSAGE RECOVERY ...............................................................................................................................................12
+LOGON MESSAGE NEXTEXPECTEDMSGSEQNUM PROCESSING ................................................................................14
+STANDARD MESSAGE HEADER .................................................................................................................................15
+Application Version Independence Considerations.............................................................................................15
+Message Routing Details .....................................................................................................................................15
+STANDARD MESSAGE TRAILER .................................................................................................................................19
+COMPONENTS ...........................................................................................................................................................19
+HopGrp component block....................................................................................................................................19
+ADMINISTRATIVE MESSAGES ..........................................................................................................................20
+HEARTBEAT..............................................................................................................................................................20
+LOGON .....................................................................................................................................................................21
+MsgTypeGrp component block............................................................................................................................22
+TEST REQUEST .........................................................................................................................................................24
+RESEND REQUEST.....................................................................................................................................................25
+REJECT (SESSION-LEVEL)..........................................................................................................................................26
+SEQUENCE RESET (GAP FILL) ..................................................................................................................................29
+Gap Fill mode......................................................................................................................................................29
+Reset mode...........................................................................................................................................................29
+LOGOUT ...................................................................................................................................................................31
+FIXT HEADER MAPPING TABLE.......................................................................................................................33
+FIXT TRAILER MAPPING TABLE......................................................................................................................38
+FIX SESSION-LEVEL TEST CASES AND EXPECTED BEHAVIORS ...........................................................39
+APPLICABILITY .........................................................................................................................................................39
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 3 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+WHEN TO SEND A LOGOUT VS. WHEN TO JUST DISCONNECT .....................................................................................39
+WHEN TO SEND A SESSION REJECT VS. WHEN TO IGNORE THE MESSAGE...................................................................39
+WHAT CONSTITUTES A GARBLED MESSAGE ..............................................................................................................40
+FIX SESSION-LEVEL STATE MATRIX ........................................................................................................................41
+FIX LOGON PROCESS STATE TRANSITION DIAGRAM ...............................................................................................43
+FIX LOGOUT PROCESS STATE TRANSITION DIAGRAM .............................................................................................44
+TEST CASES ..............................................................................................................................................................46
+Buyside-oriented (session initiator) Logon and session initiation test case........................................................46
+Sellside-oriented (session acceptor) Logon and session initiation test case .......................................................47
+Test cases applicable to all FIX systems .............................................................................................................49
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 4 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+COMMUNICATION USING THE FIX SESSION PROTOCOL
+INTRODUCTION
+FIX Session Protocol was written to be independent of any specific communications protocol (X.25, asynch,
+TCP/IP, etc.) or physical medium (copper, fiber, satellite, etc.) chosen for electronic data delivery. It offers a
+reliable stream where a message is delivered once and in order. Up until October 2006, the FIX Session Protocol
+was coupled with the FIX Application Protocol to provide a reliable transport mechanism for the FIX application
+messages that did not really exist at the inception of FIX in 1994.
+The session level is concerned with the delivery of data while the application level defines business related data
+content. This document focuses on the delivery of data using the “FIX Session Protocol”. For details on the FIX
+Application Protocol please refer to the appropriate version of the FIX Protocol Specification documentation set
+found on the FIX website ( http://www.fixprotocol.org/specifications/ )
+In October 2006, FPL's Global Technical Committee introduced a new framework which separated the FIX Session
+Protocol from the FIX Application Protocol. This allowed the application protocol messages to use any suitable
+session transport technology, where the FIX Session Protocol became one of the available options as a session
+transport for FIX application messages. With this new framework, the GTC has introduced a new moniker
+associated with the FIX Session Protocol. Going forward the moniker to identifier the session protocol and the
+version is FIXT.x.y, with the first version being FIXT 1.1.
+
+TRANSMITTING FIXML OR OTHER XML-BASED CONTENT
+While the FIX Session Protocol is based upon “Tag=Value” syntax for the Standard Header, Standard Trailer, and
+the Administrative Messages which make up the FIX Session Protocol, it is possible to send FIXML or other XMLbased content (“payload”) via the FIX Session Protocol. The FIXML or other XML-based content is enclosed in a
+traditional “Tag=Value” FIX standard header via the standard header’s XmlDataLen and XmlData fields and
+followed by the “Tag=Value” FIX standard trailer. This allows a FIX Engine (software which implements the FIX
+Session Protocol) to transmit FIXML or other XML-based content via the robust, real-time asynchronous transport
+which has been in use for many years. The generic MsgType field (tag 35) value of “n” (lowercase n) for "XML
+message (e.g. non-FIX MsgType)" can be used when transmitting XML content which is not defined with a FIX
+MsgType.
+
+FIX MESSAGE DELIVERY
+The following section summarizes general specifications for transmitting FIX messages.
+
+Sequence Numbers:
+All FIX messages are identified by a unique sequence number. Sequence numbers are initialized at the start of
+each FIX session (see Session Protocol section) starting at 1 (one) and increment throughout the session.
+Monitoring sequence numbers will enable parties to identify and react to missed messages and to gracefully
+synchronize applications when reconnecting during a FIX session.
+Each session will establish an independent incoming and outgoing sequence series; participants will maintain a
+sequence series to assign to outgoing messages and a separate series to monitor for sequence gaps on incoming
+messages.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 5 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Heartbeats:
+During periods of message inactivity, FIX applications will generate Heartbeat messages at regular time
+intervals. The heartbeat monitors the status of the communication link and identifies incoming sequence
+number gaps. The Heartbeat Interval is declared by the session initiator using the HeartBtInt field in the Logon
+message. The heartbeat interval timer should be reset after every message is transmitted (not just heartbeats).
+The HeartBtInt value should be agreed upon by the two firms and specified by the Logon initiator and echoed
+back by the Logon acceptor. Note that the same HeartBtInt value is used by both sides, the Logon “initiator”
+and Logon “acceptor”.
+
+Ordered Message Processing:
+The FIX protocol assumes complete ordered delivery of messages between parties. Implementers should
+consider this when designing message gap fill processes. Two options exist for dealing with gaps, either
+request all messages subsequent to the last message received or ask for the specific message missed while
+maintaining an ordered list of all newer messages. For example, if the receiver misses the second of five
+messages, the application could ignore messages 3 through 5 and generate a resend request for messages 2
+through 5, or, preferably 2 through 0 (where 0 represents infinity). Another option would involve saving
+messages 3 through 5 and resending only message 2. In both cases, messages 3 through 5 should not be
+processed before message 2.
+
+Possible Duplicates:
+When a FIX engine is unsure if a message was successfully received at its intended destination or when
+responding to a resend request, a possible duplicate message is generated. The message will be a
+retransmission (with the same sequence number) of the application data in question with the PossDupFlag
+included and set to "Y" in the header. It is the receiving application's responsibility to handle the message (i.e.
+treat as a new message or discard as appropriate). All messages created as the result of a resend request will
+contain the PossDupFlag field set to “Y”. Messages lacking the PossDupFlag field or with the PossDupFlag
+field set to “N” should be treated as original transmissions. Note: When retransmitting a message with the
+PossDupFlag set to Y, it is always necessary to recalculate the CheckSum value. The only fields that can
+change in a possible duplicate message are the CheckSum, OrigSendingTime, SendingTime, BodyLength and
+PossDupFlag. Fields related to encryption (SecureDataLen and SecureData) may also require recasting.
+
+Possible Resends:
+Ambiguous application level messages may be resent with the PossResend flag set. This is useful when an
+order remains unacknowledged for an inordinate length of time and the end-user suspects it had never been
+sent. The receiving application must recognize this flag and interrogate internal fields (order number, etc.) to
+determine if this order has been previously received. Note: The possible resend message will contain exactly
+the same body data but will have the PossResend flag and will have a new sequence number. In addition the
+CheckSum field will require recalculation and fields related to encryption (SecureDataLen and SecureData)
+may also require recasting.
+
+Data Integrity:
+The integrity of message data content can be verified in two ways: verification of message length and a simple
+checksum of characters.
+The message length is indicated in the BodyLength field and is verified by counting the number of characters in
+the message following the BodyLength field up to, and including, the delimiter immediately preceding the
+CheckSum tag (“10=”).
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 6 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+The CheckSum integrity check is calculated by summing the binary value of each character from the “8” of
+“8=“ up to and including the <SOH> character immediately preceding the CheckSum tag field and comparing
+the least significant eight bits of the calculated value to the CheckSum value (see “CheckSum
+Calculation” for a complete description).
+
+Message Acknowledgment:
+The FIX session protocol is based on an optimistic model; normal delivery of data is assumed (i.e. no
+acknowledgment of individual messages) with errors in delivery identified by message sequence number gaps.
+Each message is identified by a unique sequence number. It is the receiving application's responsibility to
+monitor incoming sequence numbers to identify message gaps for response with resend request messages.
+The FIX protocol does not support individual message acknowledgment. However, a number of application
+messages require explicit application level acceptance or rejection. See Volume 1 of the FIX Protocol
+specification for more details on FIX application messaging behavior.
+
+Encryption:
+The use of SecureData(91) to encrypt FIX message has been deprecated in FIXT.1.1 The use of custom
+encryption is no longer recommended. Refer to the Information Security White Paper from the FIX Information
+Security Subcommittee.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 7 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+SESSION PROTOCOL
+A FIX session is defined as a bi-directional stream of ordered messages between two parties within a continuous
+sequence number series. A single FIX session can exist across multiple sequential (not concurrent) physical
+connections. Parties can connect and disconnect multiple times while maintaining a single FIX session. Connecting
+parties must bi-laterally agree as to when sessions are to be started/stopped based upon individual system and time
+zone requirements. Resetting the inbound and outbound sequence numbers back to 1, for whatever reason,
+constitutes the beginning of a new FIX session.
+It is recommended that a new FIX session be established once within each 24 hour period. It is possible to maintain
+24 hour connectivity and establish a new set of sequence numbers by sending a Logon message with the
+ResetSeqNumFlag set.
+The FIX session protocol is based on an optimistic model. Normal delivery of data is assumed (i.e. no
+communication level acknowledgment of individual messages) with errors in delivery identified by message
+sequence number gaps. This section provides details on the implementation of the FIX session layer and dealing
+with message sequence gaps.
+The following terms are used throughout this section:
+•
+
+Valid FIX Message is a message that is properly formed according to this specification and contains a
+valid body length and checksum field
+
+•
+
+Initiator establishes the telecommunications link and initiates the session via transmission of the initial
+Logon message.
+
+•
+
+Acceptor is the receiving party of the FIX session. This party has responsibility to perform first level
+authentication and formally declare the connection request “accepted” through transmission of an
+acknowledgment Logon message.
+
+•
+
+FIX Connection is comprised of three parts: logon, message exchange, and logout.
+
+•
+
+FIX Session is comprised of one or more FIX Connections, meaning that a FIX Session spans
+multiple logins.
+
+Application Version Independence
+A FIXT.1.1 FIX session supports transmission of multiple versions of Application Messages over the same FIX
+session.
+A FIXT.1.1 FIX session can support transmission of multiple application versions of the same Message Type.
+
+Default Application Version Identification
+Session Default Application Version
+The Session Default Application Version is specified in the DefaultApplVerID(1137) of the Logon Message
+used to initiate a FIX session. The Session Default Application Version must be specified at Logon time.
+Message Type Default Application Version
+The MsgTypeGrp component can optionally be used to specify what Application Messages are supported over
+the FIX Session being initiated.
+Within the MsgTypeGrp component,, a FIX session can specify a Message Type Default Application Version
+on the Logon message within the MsgTypeGrp Component. For each Message Type where the default
+application version is different from the Session Default Application Version, the Message Type Default
+Application Version is specified using the RefMsgType(372) field to specify the MsgType, the
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 8 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+RefApplVerID(1130) to specify the Application Version and the DefaultVerIndicator(1410) field to indicate if
+the RefApplVerID(1130) as the default.
+The Message Type Default Application Version has precedence over the Session Default Application Version.
+Explicit Application Version
+The application version can be specified on a Message Instance using the ApplVerID(1128) field from the
+FIXT.1.1 Standard Header.
+The Explicit Application Version only applies to the Message Instance in which it is sent, default application
+versions remain unaltered.
+The Explicit Application Version has precedence over the Message Type Default Application Version and the
+Session Default Application Version.
+FIX Message Processors (colloquially FIX engines) must maintain state information regarding the Default
+Application Version used during the FIX Session.
+Application Version Precedence
+Application Version
+
+Fields
+
+Precedence
+
+Session Default
+
+DefaultApplVerID(1137)
+
+Lowest level of precedence
+
+Message Type Default
+
+RefMsgType(372),
+RefApplVerID(1130),
+DefaultVerIndicator(1410)
+
+Supercedes the Session
+Application Version.
+
+Explicit
+
+ApplVerID(1128)
+
+Has precedence over Default
+Application Versions. Only applies
+to the Message Instance.
+
+Default
+
+Extension Pack Support
+The concept of an Extension Pack was introduced with FIX.5.0 and FIXT.1.1 in order to permit adoption of
+functionality between versions of FIX. An Extension Pack is a set of changes to the FIX Specification (more
+accurately – to the FIX Repository). Prior to the introduction of FIX.5.0 and FIXT.1.1, early adopters were
+required to use user defined tags to adopt new functionality as part of the existing version. Extension Packs
+permit the assignment of tag numbers and message types so that specific enhancements can be adopted
+between versions of the FIX Specification.
+Extension Pack Backround
+Extension Packs are identified by a sequential integer number and must be applied in order.
+Extension Packs are cumulative.
+Extensions are applied sequentially to create a Version of FIX, normally released as a Service Pack (starting
+with FIX.5.0).
+An Extension Pack is considered available for use, if it has been approved and released for use by the FIX
+Global Technical Committee.
+Use of Extension Packs
+A FIX session can optionally specify a default extension pack as part of the Session Default Application
+Version by inclusion of a valid Extension Pack number in the DefaultApplExtID(1407).
+An Extension Pack can be specified for a specific Message Type using the RefApplExtID(1406) field within
+the MsgTypeGrp Comoponent. If provided, the RefApplExtID becomes part of the Message Type Default
+Application Version.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 9 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+A Message Instance can explicitly include an Extension Pack in the ApplExtID(1156) field. If the ApplExtID is
+specified it becomes part of the Explicit Application Version.
+An Extension Pack is considered Incompatible with the Application Version if the Extension Pack specified is
+less than the last Extension Pack that were used to create the Application Version.
+Given Application Version N, created from Extension Packs, x , x+1, .. x+y, an Extension Pack z is considered
+compatible with Application Version N if z > x+y.
+Note to FIX Message Processor Implementors: There is no requirement for a FIX Message Processor to be
+able to dynamically configure and apply Extension Packs. The creation of Application Versions that include
+Extension Packs is deemed to be done outside of standard processing during development or configuration
+time. [REWORD]
+
+Custom Application Version Support
+In order to permit counterparties to create custom versions of FIX that restrict and.or extend the FIX
+specification, the concept of a Custom Appplication Version has been introduced. The Custom Application
+Version can be considered and implementation specific dictionary based upon the Application Version
+specified in an ApplVerID field.
+The Custom Application Version can be a subset of a FIX Application Version.
+By counterparty agreement, a Custom Application Version can be optionally specified. The Custom
+Application Version is a user defined string whose format is left undefined by the specification. Users can
+choose to use a URI or URL for instance. Marketplaces may choose to use their market acronym and a version
+number, such as CME5.0 or OMX5.0 for instance.
+A default Custom Application Version can be specified in the DefaultCstmApplVerID(1408), If specified, the
+DefaultCstmApplVerID becomes part of the Session Default Application Version.
+A default Custom Application Version can be specified for a Message Type using the
+RefCstmApplVerID(1131) field. If specified, the RefCstmApplVerID becomes part of the Message Type
+Default Application Version.
+A Custom Application Version can be specified explicitly on an Application Message using the
+CstmApplVerID(1129) field in the FIXT Standard Header. If specified, the CstmApplVerID becomes part of
+the Explicit Application Version for the message instance.
+
+Application Version Not Specified on FIXT.1.1 Session Level MessagesFIX Session Level messages (Logon,
+Logout, Reject, ResendRequest, SequenceReset, TestRequest, Heartbeat) are versioned as part of the FIXT.1.1
+Session Level.
+The use of the Explicit Application Version fields [ApplVerID(1128), ApplExtID(1156), CstmApplVerID
+(1129)] is not permitted on FIX Session Level Messages.
+
+Logon
+Establishing a FIX connection involves three distinct operations: creation of a telecommunications level link,
+authentication/acceptance of the initiator by the acceptor and message synchronization (initialization). The
+sequence of connection follows:
+•
+
+The session initiator establishes a telecommunication link with the session acceptor.
+
+•
+
+The initiator sends a Logon message. The acceptor will authenticate the identity of the initiator by
+examining the Logon message. The Logon message will contain the data necessary to support the
+previously agreed upon authentication method. If the initiator is successfully authenticated, the acceptor
+responds with a Logon message. If authentication fails, the session acceptor should shut down the
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 10 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+connection after optionally sending a Logout message to indicate the reason of failure. Sending a Logout in
+this case is not required because doing so would consume a sequence number for that session, which in
+some cases may be problematic. The session initiator may begin to send messages immediately following
+the Logon message, however, the acceptor may not be ready to receive them. The initiator must wait for the
+confirming Logon message from the acceptor before declaring the session fully established.
+After the initiator has been authenticated, the acceptor will respond immediately with a confirming Logon
+message. Depending on the encryption method being used for that session, this Logon message may or
+may not contain the same session encryption key. The initiator side will use the Logon message being
+returned from the acceptor as confirmation that a FIX session has been established. If the session acceptor
+has chosen to change the session encryption key, the session initiator must send a third Logon back to the
+other side in order to acknowledge the key change request. This also allows the session acceptor to know
+when the session initiator has started to encrypt using the new session key. Both parties are responsible for
+infinite loop detection and prevention during this phase of the session.
+•
+
+After authentication, the initiator and acceptor must synchronize their messages through
+interrogation of the MsgSeqNum field before sending any queued or new messages. A comparison of
+the MsgSeqNum in the Logon message to the internally monitored next expected sequence number will
+indicate any message gaps. Likewise, the initiator can detect gaps by comparing the acknowledgment
+Logon message’s MsgSeqNum to the next expected value. The section on message recovery later in this
+document deals with message gap handling.
+
+•
+
+It is recommended to wait a short period of time following the Logon or to send a TestRequest and wait for
+a response to it before sending queued or new messages in order to allow both sides to handle resend
+request processing. Failure to do this could result in a ResendRequest message being issued by one’s
+counterparty for each queued or new message sent. (see "Logon Message NextExpectedMsgSeqNum
+Processing" for an alternative approach)
+
+•
+
+It is also recommended that an engine should store out of sequence messages in a temporary queue and
+process them in order when the gap is closed. This prevents generating resend requests for n->m, n->m+1,
+n->m+2, ... which can result in many resent PossDupFlag=Y messages.
+
+•
+
+When using the ResetSeqNumFlag to maintain 24 hour connectivity and establish a new set of sequence
+numbers, the process should be as follows. Both sides should agree on a reset time and the party that will
+be the initiator of the process. Note that the initiator of the ResetSeqNum process may be different than the
+initiator of the Logon process. One side will initiate the process by sending a TestRequest and wait for a
+Heartbeat in response to ensure of no sequence number gaps. Once the Heartbeat has been received, the
+initiator should send a Logon with ResetSeqNumFlag set to Y and with MsgSeqNum of 1. The acceptor
+should respond with a Logon with ResetSeqNumFlag set to Y and with MsgSeqNum of 1. At this point
+new messages from either side should continue with MsgSeqNum of 2. It should be noted that once the
+initiator sends the Logon with the ResetSeqNumFlag set, the acceptor must obey this request and the
+message with the last sequence number transmitted “yesterday” may no longer be available. The
+connection should be shutdown and manual intervention taken if this process is initiated but not followed
+properly.
+
+Message exchange
+After completion of the initialization process, normal message exchange begins. The formats for all valid
+messages are detailed in the sections 'Administrative Messages' and 'Application Messages'.
+
+Logout
+Normal termination of the message exchange session will be completed via the exchange of Logout messages.
+Termination by other means should be considered an abnormal condition and dealt with as an error. Session
+termination without receiving a Logout should treat the counterparty as logged out.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 11 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+It is recommended that before sending the Logout message, a TestRequest should be issued to force a Heartbeat
+from the other side. This helps to ensure that there are no sequence number gaps.
+
+Before actually closing the session, the Logout initiator should wait for the opposite side to respond with a
+confirming Logout message. This gives the acceptor a chance to perform any Gap Fill operations that may be
+necessary. Once the messages from the ResendRequest have been received, the acceptor should issue the
+Logout. The session may be terminated if the acceptor does not respond in an appropriate timeframe.
+Note: Logging out does not affect the state of any orders. All active orders will continue to be eligible for
+execution after logout.
+
+Message Recovery
+During initialization, or in the middle of a FIX session, message gaps may occur which are detected via the
+tracking of incoming sequence numbers. The following section provides details on how to recover messages.
+As previously stated, each FIX participant must maintain two sequence numbers for each FIX session, one each
+for incoming and outgoing messages which are initialized at ‘1’ at the beginning of the FIX session. Each
+message is assigned a unique (by connection) sequence number, which is incremented after each message.
+Likewise, every message received has a unique sequence number and the incoming sequence counter is
+incremented after each message.
+When the incoming sequence number does not match the expected number corrective processing is required.
+Note that the SeqReset-Reset message (used only to recover from a disaster scenario vs. normal resend request
+processing) is an exception to this rule as it should be processed without regards to its MsgSeqNum. If the
+incoming message has a sequence number less than expected and the PossDupFlag is not set, it indicates
+a serious error. It is strongly recommended that the session be terminated and manual intervention be
+initiated. If the incoming sequence number is greater than expected, it indicates that messages were missed
+and retransmission of the messages is requested via the Resend Request (see the earlier section, Ordered
+Message Processing).
+Note: For the purposes of the following paragraphs requester refers to the party requesting the resend and
+resender refers to the party responding to the request. The process of resending and synchronizing messages is
+referred as “gap filling”.
+Upon receipt of a Resend Request, the resender can respond in one of three ways:
+1.
+
+retransmit the requested messages (in order) with the original sequence numbers and PossDupFlag set
+to “Y” except for the administrative messages (listed below) which are not to be resent and which
+require a SeqReset-GapFill (#2)
+
+2.
+
+issue a SeqReset-GapFill with PossDupFlag set to “Y” message to replace the retransmission of
+administrative and application messages
+
+3.
+
+issue a SeqReset-Reset with PossDupFlag set to “Y” to force sequence number synchronization
+
+The normal course of action involves a combination of #1 and #2. Note that #3 should be used ONLY to
+recover from a disaster situation which cannot be otherwise recovered via “Gap Fill” mode
+During the gap fill process, certain administrative messages should not be retransmitted. Instead, a
+special SeqReset-GapFill message is generated. The administrative messages which are not to be resent
+are: Logon, Logout, ResendRequest, Heartbeat, TestRequest and SeqReset-Reset and SeqReset-GapFill.
+The SeqReset-GapFill can also be used to skip application messages that the sender chooses not to retransmit
+(e.g. aged orders). This leaves Reject as the only administrative message which can be resent.
+All FIX implementations must monitor incoming messages to detect inadvertently retransmitted administrative
+messages (PossDupFlag flag set indicating a resend). When received, these messages should be processed for
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 12 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+sequence number integrity only; the business/application processing of these message should be skipped (i.e. do
+not initiate gap fill processing based on a resent ResendRequest).
+If there are consecutive administrative messages to be resent, it is suggested that only one SeqReset-GapFill
+message be sent in their place. The sequence number of the SeqReset-GapFill message is the next expected
+outbound sequence number. The NewSeqNo field of the GapFill message contains the sequence number of
+the highest administrative message in this group plus 1. For example, during a Resend operation there are 7
+sequential administrative messages waiting to be resent. They start with sequence number 9 and end with
+sequence number 15. Instead of transmitting 7 Gap Fill messages (which is perfectly legal, but not network
+friendly), a SeqReset-GapFill message may be sent. The sequence number of the Gap Fill message is set to
+9 because the remote side is expecting that as the next sequence number. The NewSeqNo field of the
+GapFill message contains the number 16, because that will be the sequence number of the next message to be
+transmitted.
+Sequence number checking is a vital part of FIX session management. However, a discrepancy in the sequence
+number stream is handled differently for certain classes of FIX messages. The table below lists the actions to
+be taken when the incoming sequence number is greater than the expected incoming sequence number.
+NOTE: In *ALL* cases except the Sequence Reset - Reset message, the FIX session should be
+terminated if the incoming sequence number is less than expected and the PossDupFlag is not set. A
+Logout message with some descriptive text should be sent to the other side before closing the session.
+
+Response by Message Type
+Message Type
+
+Action to Be Taken on Sequence # mismatch
+
+Logon
+
+Must always be the first message transmitted. Authenticate and accept the
+connection.
+After sending a Logon confirmation back, send a
+ResendRequest if a message gap was detected in the Logon sequence
+number.
+
+Logout
+
+If a message gap was detected, issue a ResendRequest to retrieve all missing
+messages followed by a Logout message which serves as a confirmation of
+the logout request. DO NOT terminate the session. The initiator of the
+Logout sequence has responsibility to terminate the session. This allows the
+Logout initiator to respond to any ResendRequest message.
+If this side was the initiator of the Logout sequence, then this is a Logout
+confirmation and the session should be immediately terminated upon receipt.
+The only exception to the “do not terminate the session” rule is for an
+invalid Logon attempt. The session acceptor has the right to send a Logout
+message and terminate the session immediately. This minimizes the threat
+of unauthorized connection attempts.
+
+ResendRequest
+
+Perform the Resend processing first, followed by a ResendRequest of your
+own in order to fill the incoming message gap.
+
+SeqReset-Reset
+
+Ignore the incoming sequence number. The NewSeqNo field of the SeqReset
+message will contain the sequence number of the next message to be
+transmitted.
+
+SeqReset-GapFill
+
+Send a ResendRequest back. Gap Fill messages behave similar to a
+SeqReset message. However, it is important to insure that no messages have
+been inadvertently skipped over. This means that GapFill messages must be
+received in sequence. An out of sequence GapFill is an abnormal condition
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 13 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+All Other Messages
+
+March 2008
+
+Perform Gap Fill operations.
+
+Logon Message NextExpectedMsgSeqNum Processing
+The NextExpectedMsgSeqNum (789) field has been added in FIX 4.4 to the Logon message to support a proposed
+new way to resynchronize a FIX session. This new method is optional and its use should be bilaterally agreed upon
+between counterparties.
+NextExpectedMsgSeqNum (789) is used as follows:
+In its Logon request the session initiator supplies in NextExpectedMsgSeqNum (789) the value next expected from
+the session acceptor in MsgSeqNum (34). The outgoing header MsgSeqNum (34) of the Logon request is assigned
+the next-to-be-assigned sequence number as usual.
+The session acceptor validates the Logon request including that NextExpectedMsgSeqNum (789) does not represent
+a gap. It then constructs its Logon response with NextExpectedMsgSeqNum (789) containing the value next
+expected from the session initiator in MsgSeqNum (34) having incremented the number above the Logon request if
+that was the sequence expected. The outgoing header MsgSeqNum (34) is constructed as usual.
+The session initiator waits to begin sending application messages until it receives the Logon response. When it is
+received the initiator validates the response including that NextExpectedMsgSeqNum (789) does not represent a
+gap.
+Both sides react to NextExpectedMsgSeqNum (789) from its counterparty thus:
+•
+
+If equal to the next-to-be-assigned sequence, proceed sending new messages beginning with that number.
+
+•
+
+If lower than the next-to-be-assigned sequence, "recover" (see "Message Recovery") all messages from the the
+last message delivered prior to this Logon through the specified NextExpectedMsgSeqNum (789) sending them
+in order; then Gap Fill over the sequence number used in Logon and proceed sending newly queued messages
+with a sequence number one higher than the original Logon.
+
+•
+
+If higher than the next-to-be-assigned sequence, send Logout to abort the session.
+
+Neither side should generate a ResendRequest based on MsgSeqNum (34) of the incoming Logon message but
+should expect any gaps to be filled automatically. If a gap is produced by the Logon message MsgSeqNum (34),
+the receive logic should expect the gap to be filled automatically prior to receiving any messages with sequences
+above the gap.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 14 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Standard Message header
+Each administrative or application message is preceded by a standard header. The header identifies the message
+type, length, destination, sequence number, origination point and time.
+Two fields help with resending messages. The PossDupFlag is set to Y when resending a message as the result of a
+session level event (i.e. the retransmission of a message reusing a sequence number). The PossResend is set to Y
+when reissuing a message with a new sequence number (i.e. when resending an order). The receiving application
+should process these messages as follows:
+PossDupFlag - if a message with this sequence number has been previously received, ignore message, if not,
+process normally.
+PossResend - forward message to application and determine if previously received (i.e. verify order id and
+parameters).
+
+Application Version Independence Considerations
+FIXT header and trailer must maintain backward compatibility with headers and trailers from FIX.4.0 through
+FIX.4.4.
+FIX Message Processors must map the FIXT.1.1 Header and Trailer to the appropriate headers and and trailer
+for the corresponding FIX Application Version.
+Refer to the FIXT Header Mapping Table provided near the end of this document.
+
+Message Routing Details
+Message Routing Details – One Firm-to-One Firm (point-to-point)
+The following table provides examples regarding the use of SenderCompID, TargetCompID, DeliverToCompID,
+and OnBehalfOfCompID when using a single point-to-point FIX session between two firms. Assumption
+(A=sellside, B =buyside):
+SenderCompID
+
+OnBehalfOfCompID
+
+TargetCompID
+
+A to B directly
+
+A
+
+B
+
+B to A directly
+
+B
+
+DeliverToCompID
+
+A
+
+Message Routing Details – Third Party Message Routing
+The FIX Session Protocol supports the ability for a single FIX session to represent multiple counterpaties. This can
+be in a 1-to-many, many-to-1, or 1-to-1 fashion. In addition, some third parties may be connected to other third
+parties effectively forming a “chain” of “hops” between the original message initiator and the final message
+receiver. The SenderCompID, OnBehalfOfCompID, TargetCompID, and DeliverToCompID fields are used for
+routing purposes.
+When a third party sends a message on behalf of another firm (using OnBehalfOfCompID), that third party may
+optionally add their details to the NoHops repeating group. This repeating group builds a “history” of third parties
+through which the original message was re-transmitted. The NoHops repeating group is NOT used to facilitate
+routing, rather it provides an audit trail of third party involvement to the receiver of a message. An audit trail of
+intermediary involvement may be a requirement of some regulatory bodies or counterparties. When a third party
+forwards a message on to the next hop (may be the end point or another third party), that third party can add its hop
+details to the NoHops repeating group (i.e. its SenderCompID as HopCompID, its SendingTime as
+HopSendingTime, and the received message’s MsgSeqNum or some other reference as HopRefID).
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 15 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Note that if OnBehalfOfCompID or DeliverToCompID message source identification/routing is used for a
+FIX session, then it must be used on all Application messages transmitted via that session accordingly (Reject
+the message if not).
+
+The following table provides examples regarding the use of SenderCompID, TargetCompID, DeliverToCompID,
+and OnBehalfOfCompID when using a single FIX session to represent multiple firms. Assumption (A=sellside, B
+and C=buyside, Q=third party):
+SenderCompID
+
+OnBehalfOf
+CompID
+
+TargetCompID
+
+DeliverTo
+CompID
+
+HopCompID
+
+HopSendingTime
+
+Send from A to B via Q
+1)
+
+A sends to Q
+
+A
+
+2)
+
+Q sends to B
+
+Q
+
+Q
+A
+
+B
+
+B
+
+Q
+
+A’s
+SendingTime
+
+Q
+
+B’s
+SendingTime
+
+Q
+
+A’s
+SendingTime
+
+Q
+
+A’s
+SendingTime
+
+Q
+
+B’s
+SendingTime
+
+Q
+
+C’s
+SendingTime
+
+B responds to A via Q
+1)
+
+B sends to Q
+
+B
+
+2)
+
+Q sends to A
+
+Q
+
+Q
+B
+
+A
+
+A
+
+Send from A to B *AND* C via Q
+1)
+
+A sends to Q
+
+A
+
+2)
+
+Q sends to B
+
+Q
+
+3)
+
+A sends to Q
+
+A
+
+4)
+
+Q sends to C
+
+Q
+
+Q
+A
+
+B
+Q
+
+A
+
+B
+
+C
+
+C
+
+B *AND* C send to A via Q
+1)
+
+B sends to Q
+
+B
+
+2)
+
+Q sends to A
+
+Q
+
+3)
+
+C sends to Q
+
+C
+
+4)
+
+Q sends to A
+
+Q
+
+Q
+B
+
+A
+Q
+
+C
+
+A
+
+A
+
+A
+
+Note that some fields (e.g. ClOrdID on a New Order Single) must be unique for all orders on a given FIX
+session. Thus when using OnBehalfOfCompID (or DeliverToCompID) addressing, a recommended
+approach is to prepend OnBehalfOfCompID (or DeliverToCompID) to the original value. Thus if A sends Q
+ClOrdID value of "123", then Q could specify ClOrdID of "A-123" when sending the message to C to ensure
+uniqueness.
+The standard message header format is as follows:
+
+Standard Message Header
+Tag
+
+FieldName
+
+Req'd
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Comments
+
+Page 16 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+8
+
+BeginString
+
+Y
+
+FIXT.1.1 (Always unencrypted, must be first field in
+message)
+
+9
+
+BodyLength
+
+Y
+
+(Always unencrypted, must be second field in message)
+
+35
+
+MsgType
+
+Y
+
+(Always unencrypted, must be third field in message)
+
+1128
+
+ApplVerID
+
+N
+
+Indicates application version using a service pack
+identifier. The ApplVerID applies to a specific message
+occurrence.
+
+1156
+
+ApplExtID
+
+N
+
+1129
+
+CstmApplVerID
+
+N
+
+Used to support bilaterally agreed custom functionality
+
+49
+
+SenderCompID
+
+Y
+
+(Always unencrypted)
+
+56
+
+TargetCompID
+
+Y
+
+(Always unencrypted)
+
+115
+
+OnBehalfOfCompID
+
+N
+
+Trading partner company ID used when sending
+messages via a third party (Can be embedded within
+encrypted data section.)
+
+128
+
+DeliverToCompID
+
+N
+
+Trading partner company ID used when sending
+messages via a third party (Can be embedded within
+encrypted data section.)
+
+90
+
+SecureDataLen
+
+N
+
+Required to identify length of encrypted section of
+message. (Always unencrypted)
+
+91
+
+SecureData
+
+N
+
+Required when message body is encrypted.
+immediately follows SecureDataLen field.
+
+34
+
+MsgSeqNum
+
+Y
+
+(Can be embedded within encrypted data section.)
+
+50
+
+SenderSubID
+
+N
+
+(Can be embedded within encrypted data section.)
+
+142
+
+SenderLocationID
+
+N
+
+Sender's LocationID (i.e. geographic location and/or
+desk) (Can be embedded within encrypted data section.)
+
+57
+
+TargetSubID
+
+N
+
+"ADMIN" reserved for administrative messages not
+intended for a specific user. (Can be embedded within
+encrypted data section.)
+
+143
+
+TargetLocationID
+
+N
+
+Trading partner LocationID (i.e. geographic location
+and/or desk) (Can be embedded within encrypted data
+section.)
+
+116
+
+OnBehalfOfSubID
+
+N
+
+Trading partner SubID used when delivering messages
+via a third party. (Can be embedded within encrypted
+data section.)
+
+144
+
+OnBehalfOfLocationID
+
+N
+
+Trading partner LocationID (i.e. geographic location
+and/or desk) used when delivering messages via a third
+party. (Can be embedded within encrypted data section.)
+
+129
+
+DeliverToSubID
+
+N
+
+Trading partner SubID used when delivering messages
+via a third party. (Can be embedded within encrypted
+data section.)
+
+145
+
+DeliverToLocationID
+
+N
+
+Trading partner LocationID (i.e. geographic location
+and/or desk) used when delivering messages via a third
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Always
+
+Page 17 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+party. (Can be embedded within encrypted data section.)
+
+43
+
+PossDupFlag
+
+N
+
+Always required for retransmitted messages, whether
+prompted by the sending system or as the result of a
+resend request. (Can be embedded within encrypted data
+section.)
+
+97
+
+PossResend
+
+N
+
+Required when message may be duplicate of another
+message sent under a different sequence number. (Can be
+embedded within encrypted data section.)
+
+52
+
+SendingTime
+
+Y
+
+(Can be embedded within encrypted data section.)
+
+122
+
+OrigSendingTime
+
+N
+
+Required for message resent as a result of a
+ResendRequest. If data is not available set to same value
+as SendingTime (Can be embedded within encrypted
+data section.)
+
+212
+
+XmlDataLen
+
+N
+
+Required when specifying XmlData to identify the length
+of a XmlData message block. (Can be embedded within
+encrypted data section.)
+
+213
+
+XmlData
+
+N
+
+Can contain a XML formatted message block (e.g.
+FIXML).
+Always immediately follows XmlDataLen
+field. (Can be embedded within encrypted data section.)
+See Volume 1: FIXML Support
+
+347
+
+MessageEncoding
+
+N
+
+Type of message encoding (non-ASCII characters) used
+in a message's "Encoded" fields. Required if any
+"Encoding" fields are used.
+
+369
+
+LastMsgSeqNumProcessed
+
+N
+
+The last MsgSeqNum value received by the FIX engine
+and processed by downstream application, such as
+trading system or order routing system. Can be specified
+on every message sent. Useful for detecting a backlog
+with a counterparty.
+
+N
+
+Number of repeating groups of historical "hop"
+information. Only applicable if OnBehalfOfCompID is
+used, however, its use is optional. Note that some market
+regulations or counterparties may require tracking of
+message hops.
+
+component block <HopGrp>
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 18 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Standard Message trailer
+Each message, administrative or application, is terminated by a standard trailer. The trailer is used to segregate
+messages and contains the three digit character representation of the Checksum value.
+The standard message trailer format is as follows:
+
+Standard Message Trailer
+Tag
+
+FieldName
+
+Req'd
+
+Comments
+
+93
+
+SignatureLength
+
+N
+
+Required when trailer contains signature. Note: Not to
+be included within SecureData field
+
+89
+
+Signature
+
+N
+
+Note: Not to be included within SecureData field
+
+10
+
+CheckSum
+
+Y
+
+(Always unencrypted, always last field in message)
+
+Components
+HopGrp component block
+Tag
+627
+
+FieldName
+NoHops
+
+Req'd
+
+Comments
+
+N
+
+628
+
+HopCompID
+
+N
+
+629
+
+HopSendingTime
+
+N
+
+630
+
+HopRefID
+
+N
+
+FIXML Definition for this Component Block– see http://www.fixprotocol.org for details
+Refer to the FIXML element HopGrp
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 19 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+ADMINISTRATIVE MESSAGES
+The administrative messages address the utility needs of the protocol. The following section describes each
+message and provides the message layout.
+Administrative messages will be generated from both sides of the connection.
+
+Heartbeat
+The Heartbeat monitors the status of the communication link and identifies when the last of a string of
+messages was not received.
+When either end of a FIX connection has not sent any data for [HeartBtInt] seconds, it will transmit a Heartbeat
+message. When either end of the connection has not received any data for (HeartBtInt + “some reasonable
+transmission time”) seconds, it will transmit a Test Request message. If there is still no Heartbeat message
+received after (HeartBtInt + “some reasonable transmission time”) seconds then the connection should be
+considered lost and corrective action be initiated. If HeartBtInt is set to zero then no regular heartbeat messages
+will be generated. Note that a test request message can still be sent independent of the value of the HeartBtInt,
+which will force a Heartbeat message.
+Heartbeats issued as the result of Test Request must contain the TestReqID transmitted in the Test Request
+message. This is useful to verify that the Heartbeat is the result of the Test Request and not as the result of a
+regular timeout.
+The heartbeat format is as follows:
+
+Heartbeat
+Tag
+
+FieldName
+
+StandardHeader
+112
+
+TestReqID
+
+StandardTrailer
+
+Req'd
+
+Comments
+
+Y
+
+MsgType = 0
+
+N
+
+Required when the heartbeat is the result of a Test
+Request message.
+
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 20 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Logon
+The logon message authenticates a user establishing a connection to a remote system. The logon message must
+be the first message sent by the application requesting to initiate a FIX session.
+The HeartBtInt (108) field is used to declare the timeout interval for generating heartbeats (same value used by
+both sides). The HeartBtInt value should be agreed upon by the two firms and specified by the Logon initiator
+and echoed back by the Logon acceptor.
+Upon receipt of a Logon message, the session acceptor will authenticate the party requesting connection and
+issue a Logon message as acknowledgment that the connection request has been accepted. The
+acknowledgment Logon can also be used by the initiator to validate that the connection was established with
+the correct party.
+The session acceptor must be prepared to immediately begin processing messages after receipt of the Logon.
+The session initiator can choose to begin transmission of FIX messages before receipt of the confirmation
+Logon, however it is recommended that normal message delivery wait until after the return Logon is received to
+accommodate encryption key negotiation.
+The confirmation Logon can be used for encryption key negotiation. If a session key is deemed to be weak, a
+stronger session key can be suggested by returning a Logon message with a new key. This is only valid for
+encryption protocols that allow for key negotiation. (See the FIX Web Site’s Application notes for more
+information on a method for encryption and key passing.)
+The Logon message can be used to specify the MaxMessageSize supported (i.e. can be used to control
+fragmentation rules for very large messages which support fragmentation). It can also be used to specify the
+MsgTypes supported for both sending and receiving.
+The logon format is as follows:
+
+Logon
+Tag
+
+FieldName
+
+StandardHeader
+
+Req'd
+
+Comments
+
+Y
+
+MsgType = A
+
+98
+
+EncryptMethod
+
+Y
+
+(Always unencrypted)
+
+108
+
+HeartBtInt
+
+Y
+
+Note same value used by both sides
+
+95
+
+RawDataLength
+
+N
+
+Required for some authentication methods
+
+96
+
+RawData
+
+N
+
+Required for some authentication methods
+
+141
+
+ResetSeqNumFlag
+
+N
+
+Indicates both sides of a FIX session should reset
+sequence numbers
+
+789
+
+NextExpectedMsgSeqNum
+
+N
+
+Optional, alternative via counterparty bi-lateral
+agreement message gap detection and recovery approach
+(see "Logon Message NextExpectedMsgSeqNum
+Processing" section)
+
+383
+
+MaxMessageSize
+
+N
+
+Can be used to specify the maximum number of bytes
+supported for messages received
+
+component block <MsgTypeGrp>
+
+N
+
+464
+
+TestMessageIndicator
+
+N
+
+553
+
+Username
+
+N
+
+554
+
+Password
+
+N
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Can be used to specify that this FIX session will be
+sending and receiving "test" vs. "production" messages.
+
+Note: minimal security exists without transport-level
+
+Page 21 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+encryption.
+
+925
+
+NewPassword
+
+N
+
+1400
+
+EncryptedPasswordMethod
+
+N
+
+1401
+
+EncryptedPasswordLen
+
+N
+
+1402
+
+EncryptedPassword
+
+N
+
+1403
+
+EncryptedNewPasswordLen
+
+N
+
+1404
+
+EncryptedNewPassword
+
+N
+
+Encrypted new password- encrypted via the method
+specified in the field EncryptedPasswordMethod(1400)
+
+1409
+
+SessionStatus
+
+N
+
+Session status at time of logon. Field is intended to be
+used when the logon is sent as an acknowledgement from
+acceptor of the FIX session.
+
+1137
+
+DefaultApplVerID
+
+Y
+
+The default version of FIX messages used in this session.
+
+1407
+
+DefaultApplExtID
+
+N
+
+The default extension pack for FIX messages used in this
+session
+
+1408
+
+DefaultCstmApplVerID
+
+N
+
+The default custom application version (dictionary) for
+FIX messages used in this session
+
+58
+
+Text
+
+N
+
+Available to provide a response to logon when used as a
+logon acknowledgement from acceptor back to the logon
+initiator.
+
+354
+
+EncodedTextLen
+
+N
+
+Must be set if EncodedText field is specified and must
+immediately precede it.
+
+355
+
+EncodedText
+
+N
+
+Encoded (non-ASCII characters) representation of the
+Text field in the encoded format specified via the
+MessageEncoding field.
+
+StandardTrailer
+
+Specifies a new password for the FIX Logon. The new
+password is used for subsequent logons.
+
+Y
+
+MsgTypeGrp component block
+Tag
+384
+
+FieldName
+NoMsgTypes
+
+Req'd
+
+Comments
+
+N
+
+Specifies
+specified
+
+the
+
+number
+
+of
+
+repeating
+
+RefMsgTypes
+
+372
+
+RefMsgType
+
+N
+
+Specifies a specific, supported MsgType. Required if
+NoMsgTypes is > 0. Should be specified from the point
+of view of the sender of the Logon message
+
+385
+
+MsgDirection
+
+N
+
+Indicates direction (send vs. receive) of a supported
+MsgType. Required if NoMsgTypes is > 0. Should be
+specified from the point of view of the sender of the
+Logon message
+
+1130
+
+RefApplVerID
+
+N
+
+Specifies the service pack release being applied to an
+application message.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 22 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+1406
+
+RefApplExtID
+
+N
+
+Specified the extension pack being applied to a message.
+
+1131
+
+RefCstmApplVerID
+
+N
+
+Specifies a custom extension to a message being applied
+at the session level.
+
+1410
+
+DefaultVerIndicator
+
+N
+
+Indicates
+that
+this
+Application
+Version
+(RefApplVerID(1130),
+RefApplExtID(1406),RefCstmApplVerID(1131)) is the
+default for the RefMsgType(372) field.
+
+FIXML Definition for this Component Block– see http://www.fixprotocol.org for details
+Refer to the FIXML element MsgTypeGrp
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 23 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Test Request
+The test request message forces a heartbeat from the opposing application. The test request message checks
+sequence numbers or verifies communication line status. The opposite application responds to the Test Request
+with a Heartbeat containing the TestReqID.
+The TestReqID verifies that the opposite application is generating the heartbeat as the result of Test Request
+and not a normal timeout. The opposite application includes the TestReqID in the resulting Heartbeat. Any
+string can be used as the TestReqID (one suggestion is to use a timestamp string).
+The test request format is as follows:
+
+Test Request
+Tag
+
+FieldName
+
+StandardHeader
+112
+
+TestReqID
+
+StandardTrailer
+
+Req'd
+Y
+
+Comments
+MsgType = 1
+
+Y
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 24 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Resend Request
+The resend request is sent by the receiving application to initiate the retransmission of messages. This function
+is utilized if a sequence number gap is detected, if the receiving application lost a message, or as a function of
+the initialization process.
+The resend request can be used to request a single message, a range of messages or all messages subsequent to
+a particular message.
+Note: the sending application may wish to consider the message type when resending messages; e.g. if a new
+order is in the resend series and a significant time period has elapsed since its original inception, the sender may
+not wish to retransmit the order given the potential for changed market conditions. (The Sequence ResetGapFill message is used to skip messages that a sender does not wish to resend.)
+Note: it is imperative that the receiving application process messages in sequence order, e.g. if message
+number 7 is missed and 8-9 received, the application should ignore 8 and 9 and ask for a resend of 7-9, or,
+preferably, 7-0 (0 represents infinity). This latter approach is strongly recommended to recover from out of
+sequence conditions as it allows for faster recovery in the presence of certain race conditions when both sides
+are simultaneously attempting to recover a gap.
+•
+
+To request a single message: BeginSeqNo = EndSeqNo
+
+•
+
+To request a range of messages: BeginSeqNo = first message of range, EndSeqNo = last message of range
+
+•
+
+To request all messages subsequent to a particular message: BeginSeqNo = first message of range,
+EndSeqNo = 0 (represents infinity) .
+
+The resend request format is as follows:
+
+Resend Request
+Tag
+
+FieldName
+
+StandardHeader
+
+Req'd
+Y
+
+7
+
+BeginSeqNo
+EndSeqNo
+
+MsgType = 2
+
+Y
+
+16
+
+Comments
+
+Y
+
+StandardTrailer
+
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 25 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Reject (session-level)
+The reject message should be issued when a message is received but cannot be properly processed due to a
+session-level rule violation. An example of when a reject may be appropriate would be the receipt of a message
+with invalid basic data (e.g. MsgType=&) which successfully passes de-encryption, CheckSum and
+BodyLength checks. As a rule, messages should be forwarded to the trading application for business level
+rejections whenever possible.
+Rejected messages should be logged and the incoming sequence number incremented.
+Note: The receiving application should disregard any message that is garbled, cannot be parsed or fails a data
+integrity check. Processing of the next valid FIX message will cause detection of a sequence gap and a Resend
+Request will be generated. Logic should be included in the FIX engine to recognize the possible infinite resend
+loop, which may be encountered in this situation.
+Generation and receipt of a Reject message indicates a serious error that may be the result of faulty logic in
+either the sending or receiving application.
+If the sending application chooses to retransmit the rejected message, it should be assigned a new sequence
+number and sent with PossResend=Y.
+Whenever possible, it is strongly recommended that the cause of the failure be described in the Text field
+(e.g. INVALID DATA - FIELD 35).
+If an application-level message received fulfills session-level rules, it should then be processed at a business
+message-level. If this processing detects a rule violation, a business-level reject should be issued. Many
+business-level messages have specific “reject” messages, which should be used. All others can be rejected at a
+business-level via the Business Message Reject message. See Volume 1: "Business Message Reject" message.
+
+Note that in the event a business message is received, fulfills session-level rules, however, the message cannot
+be communicated to the business-level processing system, a Business Message Reject with
+BusinessRejectReason = “Application not available at this time” should be issued.
+Scenarios for session-level Reject:
+SessionRejectReason
+0 = Invalid tag number
+1 = Required tag missing
+2 = Tag not defined for this message type
+3 = Undefined Tag
+4 = Tag specified without a value
+5 = Value is incorrect (out of range) for this tag
+6 = Incorrect data format for value
+7 = Decryption problem
+8 = Signature problem
+9 = CompID problem
+10 = SendingTime accuracy problem
+11 = Invalid MsgType
+12 = XML Validation error
+13 = Tag appears more than once
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 26 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+14 = Tag specified out of required order
+15 = Repeating group fields out of order
+16 = Incorrect NumInGroup count for repeating group
+17 = Non “data” value includes field delimiter (SOH character)
+99 = Other
+(Note other session-level rule violations may exist in which case
+SessionRejectReason of Other may be used and further information
+may be in Text field.)
+
+The reject format is as follows:
+
+Reject
+Tag
+
+FieldName
+
+StandardHeader
+
+Req'd
+
+Comments
+
+Y
+
+MsgType = 3
+
+45
+
+RefSeqNum
+
+Y
+
+MsgSeqNum of rejected message
+
+371
+
+RefTagID
+
+N
+
+The tag number of the FIX field being referenced.
+
+372
+
+RefMsgType
+
+N
+
+The MsgType of the FIX message being referenced.
+
+1130
+
+RefApplVerID
+
+N
+
+Recommended when rejecting an application message
+that does not explicitly provide ApplVerID ( 1128) on
+the message being rejected. In this case the value from
+the DefaultApplVerID(1137) or the default value
+specified in the NoMsgTypes repeating group on the
+logon message should be provided.
+
+1406
+
+RefApplExtID
+
+N
+
+Recommended when rejecting an application message
+that does not explicitly provide ApplExtID(1156) on the
+rejected message. In this case the value from the
+DefaultApplExtID(1407) or the default value specified in
+the NoMsgTypes repeating group on the logon message
+should be provided.
+
+1131
+
+RefCstmApplVerID
+
+N
+
+Recommended when rejecting an application message
+that does not explicitly provide CstmApplVerID(1129)
+on the message being rejected. In this case the value from
+the DefaultCstmApplVerID(1408) or the default value
+specified in the NoMsgTypes repeating group on the
+logon message should be provided.
+
+373
+
+SessionRejectReason
+
+N
+
+Code to identify reason for a session-level Reject
+message.
+
+58
+
+Text
+
+N
+
+Where possible, message to explain reason for rejection
+
+354
+
+EncodedTextLen
+
+N
+
+Must be set if EncodedText field is specified and must
+immediately precede it.
+
+355
+
+EncodedText
+
+N
+
+Encoded (non-ASCII characters) representation of the
+Text field in the encoded format specified via the
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 27 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+MessageEncoding field.
+
+StandardTrailer
+
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 28 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Sequence Reset (Gap Fill)
+The Sequence Reset message has two modes: Gap Fill mode and Reset mode.
+
+Gap Fill mode
+Gap Fill mode is used in response to a Resend Request when one or more messages must be skipped over for
+the following reasons:
+•
+
+During normal resend processing, the sending application may choose not to send a message (e.g. an aged
+order).
+
+•
+
+During normal resend processing, a number of administrative messages are skipped and not resent (such as
+Heart Beats, Test Requests).
+
+Gap Fill mode is indicated by GapFillFlag (tag 123) field = "Y".
+If the GapFillFlag field is present (and equal to "Y"), the MsgSeqNum should conform to standard message
+sequencing rules (i.e. the MsgSeqNum of the Sequence Reset GapFill mode message should represent the
+beginning MsgSeqNum in the GapFill range because the remote side is expecting that next message sequence
+number).
+
+Reset mode
+Reset mode involves specifying an arbitrarily higher new sequence number to be expected by the receiver of
+the Sequence Reset-Reset message, and is used to reestablish a FIX session after an unrecoverable application
+failure.
+Reset mode is indicated by the GapFillFlag (tag 123) field = "N" or if the field is omitted.
+If the GapFillFlag field is not present (or set to N), it can be assumed that the purpose of the Sequence Reset
+message is to recover from an out-of-sequence condition. In Sequence Reset - Reset mode, the MsgSeqNum in
+the header should be ignored (i.e. the receipt of a Sequence Reset - Reset mode message with an out of
+sequence MsgSeqNum should not generate resend requests). Sequence Reset – Reset should NOT be used as
+a normal response to a Resend Request (use Sequence Reset – Gap Fill mode). The Sequence Reset – Reset
+should ONLY be used to recover from a disaster situation which cannot be recovered via the use of Sequence
+Reset – Gap Fill. Note that the use of Sequence Reset – Reset may result in the possibility of lost messages.
+Rules for processing all Sequence Reset messages
+The sending application will initiate the Sequence Reset. The message in all situations specifies NewSeqNo
+to reset to as the value of the next sequence number to be expected by the message receipient immediately
+following the messages and/or sequence numbers being skipped.
+The Sequence Reset can only increase the sequence number. If a sequence reset is received attempting to
+decrease the next expected sequence number the message should be rejected and treated as a serious error. It is
+possible to have multiple Resend Requests issued in a row (e.g. 5 to 10 followed by 5 to 11). If sequence
+number 8, 10, and 11 represent application messages while the 5-7 and 9 represent administrative messages, the
+series of messages as result of the Resend Request may appear as Sequence Reset-GapFill mode with
+NewSeqNo of 8, message 8, Sequence Reset-GapFill with NewSeqNo of 10, and message 10. This could then
+followed by Sequence Reset-GapFill with NewSeqNo of 8, message 8, Sequence Reset-GapFill with
+NewSeqNo of 10, message 10, and message 11. One must be careful to ignore the duplicate Sequence ResetGapFill mode which is attempting to lower the next expected sequence number. This can be detected by
+checking to see if its MsgSeqNum is less than expected. If so, the Sequence Reset-GapFill mode is a duplicate
+and should be discarded.
+
+The Sequence Reset format is as follows:
+
+Sequence Reset
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 29 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+Tag
+
+FieldName
+
+StandardHeader
+
+March 2008
+
+Req'd
+Y
+
+123
+
+GapFillFlag
+NewSeqNo
+
+MsgType = 4
+
+N
+
+36
+
+Comments
+
+Y
+
+StandardTrailer
+
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 30 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Logout
+The logout message initiates or confirms the termination of a FIX session. Disconnection without the exchange
+of logout messages should be interpreted as an abnormal condition.
+Before actually closing the session, the logout initiator should wait for the opposite side to respond with a
+confirming logout message. This gives the remote end a chance to perform any Gap Fill operations that may be
+necessary. The session may be terminated if the remote side does not respond in an appropriate timeframe.
+After sending the Logout message, the logout initiator should not send any messages unless requested to do so
+by the logout acceptor via a ResendRequest.
+The logout format is as follows:
+
+Logout
+Tag
+
+FieldName
+
+Req'd
+
+Comments
+
+StandardHeader
+
+Y
+
+MsgType = 5
+
+1409
+
+SessionStatus
+
+N
+
+Session status at time of logout.
+
+58
+
+Text
+
+N
+
+354
+
+EncodedTextLen
+
+N
+
+Must be set if EncodedText field is specified and must
+immediately precede it.
+
+355
+
+EncodedText
+
+N
+
+Encoded (non-ASCII characters) representation of the
+Text field in the encoded format specified via the
+MessageEncoding field.
+
+StandardTrailer
+
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 31 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+CheckSum Calculation
+
+The checksum of a FIX message is calculated by summing every byte of the message up to but not including the
+checksum field itself. This checksum is then transformed into a modulo 256 number for transmission and
+comparison. The checksum is calculated after all encryption is completed, i.e. the message as transmitted between
+parties is processed.
+For transmission, the checksum must be sent as printable characters, so the checksum is transformed into three
+ASCII digits.
+For example, if the checksum has been calculated to be 274 then the modulo 256 value is 18 (256 + 18 = 274). This
+value would be transmitted a |10=018| where "10="is the tag for the checksum field.
+A sample code fragment to generate the checksum field is as follows:
+
+char *GenerateCheckSum( char *buf, long bufLen )
+{
+static char tmpBuf[ 4 ];
+long idx;
+unsigned int cks;
+
+for( idx = 0L, cks = 0; idx < bufLen; cks += (unsigned int)buf[ idx++ ] );
+sprintf( tmpBuf, “%03d”, (unsigned int)( cks % 256 ) );
+return( tmpBuf );
+}
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 32 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+FIXT Header Mapping Table
+Tag
+
+FieldName
+
+Level
+
+Req'd
+
+Encrypt
+-able?
+
+Order of
+the field
+within a
+FIX
+tag=value
+message
+
+Status
+
+Comments
+
+Encoding
+Use
+
+FIX 4.0
+Std
+Header
+
+FIX 4.1
+Std
+Header
+
+FIX 4.2
+Std
+Header
+
+FIX 4.3
+Std
+Header
+
+FIX 4.4
+Std
+Header
+
+FIXT.1.1
+Session
+Header
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Session Use Application
+(Y- used in Use (Y- used
+session,
+by
+DApplication;
+Deprecated) C- Compatibility
+
+Y
+
+Y
+
+Y
+
+Y
+
+FIX.5.
+0
+Applic
+ation
+
+Y
+
+with earlier
+version,E-Used in
+Appl level error
+reporting)
+
+FIXT.1.1 SESSION HEADER
+8
+
+BeginString
+
+ENCD
+&&
+SESS
+
+Y
+
+N
+
+1
+
+9
+
+BodyLength
+
+ENCD
+
+Y
+
+N
+
+2
+
+35
+
+MsgType
+
+ENCD
+&&
+SESS
+&&
+APPL
+
+Y
+
+N
+
+3
+
+49
+
+SenderCompID
+
+SESS
+
+Y
+
+N
+
+56
+
+TargetCompID
+
+SESS
+
+Y
+
+N
+
+Identifies the
+session level
+version and
+the version of
+encoding.
+Currently
+FIXT.1.1
+
+Y
+
+Y
+
+Y
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+4
+
+Y
+
+Y
+
+C
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+5
+
+Y
+
+Y
+
+C
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Business
+Reject
+Message
+references the
+MsgType
+field.
+
+FIXT.1.1 Application Version FIelds
+1128
+
+ApplVerID
+
+APPL
+
+N
+
+1156
+
+ApplExtID
+
+APPL
+
+N
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+6
+
+If
+providedthe
+ApplVerI
+D must be
+the 6th
+field in
+the
+message
+New as of
+FIXT.1.1
+Session
+Service
+Pack 1
+
+Indicates application version using a
+service pack identifier. The ApplVerID
+applies to a specific message occurrence.
+Not used on Session Level Messages
+
+Y
+
+Y
+
+Identifies the Extension Pack which is to
+be applied to the FIX version specified in
+the ApplVerID.
+
+Y
+
+Y
+
+Page 33 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+Tag
+
+FieldName
+
+Level
+
+Req'd
+
+Encrypt
+-able?
+
+Order of
+the field
+within a
+FIX
+tag=value
+message
+
+March 2008
+Status
+
+Comments
+
+Encoding
+Use
+
+Session Use Application
+(Y- used in Use (Y- used
+session,
+by
+DApplication;
+Deprecated) C- Compatibility
+
+FIX 4.0
+Std
+Header
+
+FIX 4.1
+Std
+Header
+
+FIX 4.2
+Std
+Header
+
+FIX 4.3
+Std
+Header
+
+FIX 4.4
+Std
+Header
+
+FIXT.1.1
+Session
+Header
+
+with earlier
+version,E-Used in
+Appl level error
+reporting)
+
+1129
+
+CstmApplVerI
+D
+
+APPL
+
+N
+
+Used to identify a definition for support
+bilaterally agreed custom functionality
+which specifies extensions and or
+restrictions to the version of FIX specified
+in ApplVerID and ApplExtID.
+
+Y
+
+115
+
+OnBehalfOfCo
+mpID
+
+SESS
+
+N
+
+Trading partner company ID used when
+sending messages via a third party
+
+C
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+128
+
+DeliverToComp
+ID
+
+SESS
+
+N
+
+Trading partner company ID used when
+sending messages via a third party
+
+C
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+90
+
+SecureDataLen
+
+ENCD
+
+N
+
+91
+
+SecureData
+
+ENCD
+
+N
+
+34
+
+MsgSeqNum
+
+SESS
+
+Y
+
+50
+
+SenderSubID
+
+SESS
+
+N
+
+142
+
+SenderLocation
+ID
+
+SESS
+
+N
+
+N
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+FIX.5.
+0
+Applic
+ation
+
+Deprecate
+d as of
+FIXT.1.1
+
+Deprecate
+d as of
+FIXT.1.1
+
+Y
+
+Y
+
+D[i2]
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+D[i2]
+
+Y
+
+D[i2]
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+D[i2]
+
+C,E
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+C
+
+Required to
+identify
+length of
+encrypted
+section of
+message.
+(Always
+unencrypted)
+Required
+when
+message body
+is encrypted.
+Always
+immediately
+follows
+SecureDataLe
+n field.
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Sender's LocationID (i.e. geographic
+location and/or desk)
+
+C
+
+Page 34 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+Tag
+
+FieldName
+
+Level
+
+Req'd
+
+Encrypt
+-able?
+
+Order of
+the field
+within a
+FIX
+tag=value
+message
+
+March 2008
+Status
+
+Comments
+
+Encoding
+Use
+
+Session Use Application
+(Y- used in Use (Y- used
+session,
+by
+DApplication;
+Deprecated) C- Compatibility
+
+FIX 4.0
+Std
+Header
+
+FIX 4.1
+Std
+Header
+
+FIX 4.2
+Std
+Header
+
+FIX 4.3
+Std
+Header
+
+FIX 4.4
+Std
+Header
+
+FIXT.1.1
+Session
+Header
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+with earlier
+version,E-Used in
+Appl level error
+reporting)
+
+57
+
+TargetSubID
+
+SESS
+
+N
+
+"ADMIN" reserved for administrative
+messages not intended for a specific user.
+
+C
+
+143
+
+TargetLocationI
+D
+
+SESS
+
+N
+
+Trading partner LocationID (i.e.
+geographic location and/or desk)
+
+C
+
+116
+
+OnBehalfOfSub
+ID
+
+SESS
+
+N
+
+Trading partner SubID used when
+delivering messages via a third party.
+
+C
+
+144
+
+OnBehalfOfLoc
+ationID
+
+SESS
+
+N
+
+Trading partner LocationID (i.e.
+geographic location and/or desk) used
+when delivering messages via a third party.
+
+C
+
+129
+
+DeliverToSubI
+D
+
+SESS
+
+N
+
+Trading partner SubID used when
+delivering messages via a third party.
+
+C
+
+145
+
+DeliverToLocat
+ionID
+
+SESS
+
+N
+
+Trading partner LocationID (i.e.
+geographic location and/or desk) used
+when delivering messages via a third party.
+
+C
+
+43
+
+PossDupFlag
+
+SESS
+
+N
+
+Always required for
+retransmitted messages,
+whether prompted by the
+sending system or as the
+result of a resend request.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Y
+
+Y
+
+Y
+
+Y
+
+Page 35 of 68
+
+FIX.5.
+0
+Applic
+ation
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+Tag
+
+FieldName
+
+Level
+
+Req'd
+
+97
+
+PossResend
+
+APPL
+
+Encrypt
+-able?
+
+N
+
+Order of
+the field
+within a
+FIX
+tag=value
+message
+
+March 2008
+Status
+
+Encoding
+Use
+
+FIX 4.0
+Std
+Header
+
+FIX 4.1
+Std
+Header
+
+FIX 4.2
+Std
+Header
+
+FIX 4.3
+Std
+Header
+
+FIX 4.4
+Std
+Header
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Comments
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Session Use Application
+(Y- used in Use (Y- used
+session,
+by
+DApplication;
+Deprecated) C- Compatibility
+
+FIXT.1.1
+Session
+Header
+
+with earlier
+version,E-Used in
+Appl level error
+reporting)
+
+Enhance
+Documen
+tation to
+be clear
+that
+PossRese
+nd is
+applicatio
+n level
+across all
+versions
+of FIX
+[i6]
+
+Required when message may be duplicate
+of another message sent under a different
+sequence number. PossResend is used at
+the application level. It is provided with
+the standard header definition for
+backward compatibility.
+
+Y
+
+52
+
+SendingTime
+
+SESS
+
+Y
+
+122
+
+OrigSendingTi
+me
+
+SESS
+
+N
+
+Required for message resent
+as a result of a
+ResendRequest. If data is
+not available set to same
+value as SendingTime
+
+212
+
+XmlDataLen
+
+APPL
+
+N
+
+Required when specifying XmlData to
+identify the length of a XmlData message
+block.
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+213
+
+XmlData
+
+APPL
+
+N
+
+Can contain a XML formatted message
+block (e.g. FIXML). Always immediately
+follows XmlDataLen field.
+See
+Volume 1: FIXML Support
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+347
+
+MessageEncodi
+ng
+
+ENCD
+
+N
+
+Type of message encoding (non-ASCII
+characters) used in a message’s "Encoded"
+fields. Required if any "Encoding" fields
+are used.
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+FIX.5.
+0
+Applic
+ation
+
+Page 36 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+Tag
+
+FieldName
+
+Level
+
+Req'd
+
+369
+
+LastMsgSeqNu
+mProcessed
+
+SESS
+
+OnBehalfOfSen
+dingTime
+
+SESS
+
+N
+
+HopGrp
+Component
+Block
+
+SESS
+
+N
+
+Order of
+the field
+within a
+FIX
+tag=value
+message
+
+Status
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Comments
+
+Encoding
+Use
+
+Session Use Application
+(Y- used in Use (Y- used
+session,
+by
+DApplication;
+Deprecated) C- Compatibility
+
+FIX 4.0
+Std
+Header
+
+FIX 4.1
+Std
+Header
+
+FIX 4.2
+Std
+Header
+
+FIX 4.3
+Std
+Header
+
+FIX 4.4
+Std
+Header
+
+FIXT.1.1
+Session
+Header
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+with earlier
+version,E-Used in
+Appl level error
+reporting)
+
+The last MsgSeqNum value
+received by the FIX engine
+and processed by
+downstream application,
+such as trading system or
+order routing system. Can
+be specified on every
+message sent. Useful for
+detecting a backlog with a
+counterparty.
+
+N
+
+370
+
+Encrypt
+-able?
+
+March 2008
+
+Deprecate
+d as of
+FIX.4.3;
+Removed
+as of
+FIX.4.4
+
+Y
+
+Y
+
+Field was added in
+FIX.4.2 then deprecated in
+FIX.4.3 i[5]
+
+D
+
+Y
+
+D
+
+Y
+
+Y
+
+Y
+
+Page 37 of 68
+
+FIX.5.
+0
+Applic
+ation
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+FIXT Trailer Mapping Table
+Tag
+
+FieldName
+
+Level
+
+Req'
+d
+
+Encryptable?
+
+Orderrequired
+ordering
+of the
+field
+within a
+FIX
+tag=value
+message
+
+Status
+
+Comments
+
+FIX 4.0
+Std
+Trailer
+
+FIX 4.1
+Std
+Trailer
+
+FIX 4.2
+Std
+Trailer
+
+FIX 4.3
+Std
+Trailer
+
+FIX 4.4
+Std
+Trailer
+
+FIXT.1.1
+Session
+Trailer
+
+D
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+D
+
+D
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+D
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Y
+
+Encodin
+g Use
+
+Session Use
+(Y- used in
+session, DDeprecated)
+
+Y
+
+Y
+
+Application
+Use (Y- used
+by
+Application;
+CCompatibility
+with earlier
+version,EUsed in Appl
+level error
+reporting)
+
+FIXT.1.1 SESSION TRAILER
+93
+
+SignatureLength
+
+ENCD
+&&
+SESS
+
+Y
+
+N
+
+1
+
+Deprecate
+d as of
+FIXT.1.1
+
+89
+
+Signature
+
+ENCD
+
+Y
+
+N
+
+2
+
+Deprecate
+d as of
+FIXT.1.1
+
+10
+
+CheckSum
+
+ENCD
+&&
+SESS
+&&
+APPL
+
+Y
+
+N
+
+3
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Required
+when trailer
+contains
+signature.
+Note: Not to
+be included
+within
+SecureData
+field
+Note: Not to
+be included
+within
+SecureData
+field
+(Always
+unencrypted,
+always last
+field in
+message).
+
+Y
+
+Page 38 of 68
+
+FIX.5.0
+Applica
+tion
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+FIX Session-level Test Cases and Expected Behaviors
+Applicability
+This document was last revised September 20, 2002 at which time FIX version 4.3 with Errata 20020930 was the latest version of the FIX Protocol. Note that
+future amendments to this document may be found on the FIX website and any version of this document published on a later date takes precedence over this
+version of the document. This document is applicable to all versions of FIX 4.X (4.0, 4.1, 4.2, 4.3, and 4.4) except where explicitly indicated.
+
+When to send a Logout vs. when to just disconnect
+In general a Logout message should always be sent prior to shutting down a connection. If the Logout is being sent due to an error condition, the Text field of
+the Logout should provide a descriptive reason, so that operational support of the remote FIX system can diagnosis the problem. There are exceptions, when it is
+recommended that a Logout message not be sent, these include:
+•
+
+If during a logon either the SenderCompID, TargetCompID or IP address of the session initiator is invalid, it is recommended that the session be
+immediately terminated and no Logout message sent. This login attempt might be an unauthorized attempt to break into your system; hence one does
+not want to divulge any information about one’s FIX system, such as: which SenderCompID/TargetCompID values are valid or which version of FIX is
+supported.
+
+•
+
+If during a Logon one receives a second connection attempt while a valid FIX session is already underway for that same SenderCompID, it is
+recommended that the session acceptor immediately terminate the second connection attempt and not send a Logout message. Sending a Logout
+message runs the risk of interfering with and possibly adversely affecting the current active FIX connection. For example, in some FIX system
+implementations, sending a Logout message might consume a sequence number that would cause an out of sequence condition for the established FIX
+session.
+
+In all other cases, if sending a Logout does not create risk or violate security, a Logout message should be sent with a descriptive text message.
+
+When to send a Session Reject vs. when to ignore the message
+The following excerpt is taken from the Reject message definition within the FIX Protocol specification:
+Note: The receiving application should disregard any message that is garbled, cannot be parsed or fails a data integrity check. Processing of the next valid
+FIX message will cause detection of a sequence gap and a Resend Request will be generated. Logic should be included in the FIX engine to recognize the
+possible infinite resend loop, which may be encountered in this situation.
+
+The FIX Protocol takes the optimistic view; it presumes that a garbled message is received due to a transmission error rather than a FIX system problem.
+Therefore, if a Resend Request is sent the garbled message will be retransmitted correctly. If a message is not considered garbled then it is recommended that a
+session level Reject message be sent.
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 39 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+What constitutes a garbled message
+•
+
+BeginString (tag #8) is not the first tag in a message or is not of the format 8=FIXT.n.m.
+
+•
+
+BodyLength (tag #9) is not the second tag in a message or does not contain the correct byte count.
+
+•
+
+MsgType (tag #35) is not the third tag in a message.
+
+•
+
+Checksum (tag #10) is not the last tag or contains an incorrect value.
+
+If the MsgSeqNum(tag #34) is missing a logout message should be sent terminating the FIX Connection, as this indicates a serious application error that is likely
+only circumvented by software modification.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 40 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+FIX Session-level State Matrix
+Precedence
+
+State
+
+Initiator
+
+Acceptor
+
+Description
+
+1
+
+DisconnectedNo Connection
+Today
+
+Y
+
+Y
+
+Currently disconnected, have not attempted to establish a connection “today”, and no MsgSeqNum
+have been consumed (next connection “today” will start at MsgSeqNum of 1)
+
+2
+
+DisconnectedConnection
+Today
+
+Y
+
+Y
+
+Currently disconnected, have attempted to establish a connection “today” and thus MsgSeqNum
+have been consumed (next connection “today” will start at MsgSeqNum of (last + 1) )
+
+3
+
+Detect Broken
+Network
+Connection
+
+Y
+
+Y
+
+While connected, detect a broken network connection (e.g. TCP socket closed). Disconnect the
+network connection and “shutdown” configuration for this session.
+
+4
+
+Awaiting
+Connection
+
+N
+
+Y
+
+Session acceptor Logon awaiting network connection from counterparty
+
+5
+
+Initiate
+Connection
+
+Y
+
+N
+
+Session initiator Logon establishing network connection with counterparty
+
+6
+
+Network
+Connection
+Established
+
+Y
+
+Y
+
+Network connection established between both parties
+
+7
+
+Initiation Logon
+Sent
+
+Y
+
+N
+
+Session initiator Logon send Logon message.
+
+Initiation Logon
+Received
+
+N
+
+8
+
+*** Exception: 24hr sessions.
+Y
+
+Session acceptor Logon receive counterparty’s Logon message.
+
+*** Exception: 24hr sessions.
+9
+
+Initiation Logon
+Response
+
+N
+
+Y
+
+Session acceptor Logon respond to counterparty’s Logon message with Logon message to
+handshake
+
+10
+
+Handle
+ResendRequest
+
+Y
+
+Y
+
+Receive and respond to counterparty’s ResendRequest sending requested messages and/or
+SequenceReset-Gap Fill messages for the range of MsgSeqNum requested. Updated to include
+rejecting Resend Request received with MsgSeqNum that is <= LastSeqNum processed.
+
+11
+
+Receive
+MsgSeqNum Too
+High
+
+Y
+
+Y
+
+Receive too high of MsgSeqNum from counterparty, queue message, and send ResendRequest
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 41 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+12
+
+Awaiting/Proces
+sing Response to
+ResendRequest
+
+Y
+
+Y
+
+Process requested MsgSeqNum PossDupFlag=Y resent messages and/or SequenceReset-Gap Fill
+messages from counterparty. Queue incoming messages with MsgSeqNum too high
+
+13
+
+No
+messages
+received
+in
+Interval
+
+Y
+
+Y
+
+No inbound messages (non-garbled) received in (HeartBeatInt + “reasonable period of time”),
+send TestRequest
+
+14
+
+Awaiting/Proces
+sing Response to
+TestRequest
+
+Y
+
+Y
+
+Process inbound messages. Reset heart beat interval-related timer when ANY inbound message
+(non-garbled) is received
+
+15
+
+Receive Logout
+message
+
+Y
+
+Y
+
+Receive Logout message from counterparty initiating logout/disconnect. If MsgSeqNum too high,
+send ResendRequest. If sent, wait a reasonable period of time for complete response to
+ResendRequest. Note that depending upon the reason for the Logout, the counterparty may be
+unable to fulfill the request. Send Logout message as response and wait a reasonable period of
+time for counterpaty to disconnect the network connection. Note counterparty may send a
+ResendRequest message if Logout message response has MsgSeqNum too high and then reinitiate the Logout process.
+
+16
+
+Initiate Logout
+Process
+
+Y
+
+Y
+
+Identify condition or reason to gracefully disconnect (e.g. end of “day”, no response after multiple
+TestRequest messages, too low MsgSeqNum, etc.). Send Logout message to counterparty. Wait
+a reasonable period of time for Logout response. During this time handle “new” inbound
+messages and/or ResendRequest if possible. Note that some logout/termination conditions (e.g.
+loss of database/message safe-store) may require immediate termination of the network connection
+following the initial send of the Logout message. Disconnect the network connection and
+“shutdown” configuration for this session.
+
+17
+
+Active/Normal
+Session
+
+Y
+
+Y
+
+Network connection established, Logon message exchange successfully completed, inbound and
+outbound MsgSeqNum are in sequence as expected, and Heartbeat or other messages are received
+within (HeartBeatInt + “reasonable period of time”).
+
+18
+
+Waiting
+Logon ack
+
+Y
+
+N
+
+Session initiator waiting for session acceptor to send back Logon ACK.
+
+for
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 42 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+FIX Logon Process State Transition Diagram
+Session Initiator (e.g. buyside)
+
+Session Acceptor (e.g. sellside)
+
+Session Initiator (e.g. buyside)
+
+Session Acceptor (e.g. sellside)
+
+Action
+
+Action
+
+State
+
+State
+
+•
+
+Connect
+
+Disconnected-No
+Today
+
+•
+
+Start
+
+Disconnected-Connection Today
+
+Connection
+
+Initiate Connection
+
+Awaiting Connection
+
+Awaiting Connection
+
+(Possible) Detect Broken Network
+Connection
+Accept Connection
+
+Network Connection Established
+
+Network Connection Established
+
+Initiation Logon Sent
+
+Network Connection Established
+
+Receive Initiation Logon
+
+Initiation Logon Sent
+
+Initiation Logon Received
+
+Send Initiation Logon Response
+
+Initiation Logon Sent
+
+Initiation Logon Response
+
+Initiate Logon
+
+(possible) Initiate Logout Process
+(e.g. if MsgSeqNum too low)
+
+(Possible) Receive MsgSeqNum Too
+High
+
+(Possible) Send ResendRequest
+
+Initiation Logon Response
+
+(Possible) Receive MsgSeqNum Too
+High
+Receive Initiation Logon Response
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+(Possible) Active/Normal Session
+
+Page 43 of 68
+
+Initiation Logon Response
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+(Possible) Initiate Logout Process
+(e.g. if MsgSeqNum too low)
+(Possible) Send ResendRequest
+
+(Possible) Active/Normal Session
+
+(Possible) Active/Normal Session
+
+(Possible) Receive MsgSeqNum Too
+High
+
+(Possible) Handle ResendRequest
+
+Active/Normal Session
+
+Active/Normal Session
+
+Logout Initiator State
+
+Logout Acceptor State
+
+•
+
+Active/Normal Session
+
+•
+
+Active/Normal Session
+
+•
+
+No messages received in Interval
+
+•
+
+No messages received in Interval
+
+•
+
+Awaiting/Processing Response to
+TestRequest
+
+•
+
+Initiation Logon Sent
+
+•
+
+Awaiting/Processing Response to
+TestRequest
+
+•
+
+Awaiting validation of logon
+
+•
+
+Receive MsgSeqNum Too High
+
+•
+
+Awaiting/Processing Response to
+ResendRequest
+
+•
+
+Initiate Logout Process
+
+•
+
+Waiting for Logon ack
+
+FIX Logout Process State Transition Diagram
+Logout Initiator: Action
+
+Logout Acceptor Action
+
+Start
+
+Send Logout message
+
+Logout Pending
+Receive Logout message
+
+Logout Pending
+
+Logout Pending
+
+(Possible) Receive MsgSeqNum Too
+High
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 44 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Send Logout response
+
+Logout Pending
+
+Awaiting Disconnect
+
+(Possible) Send ResendRequest
+
+Logout Pending
+
+(Possible) Awaiting / Processing
+Response to ResendRequest
+
+(Possible) receive ResendRequest
+
+(Possible) Awaiting / Processing
+Response to ResendRequest
+
+(Possible) Awaiting
+ResendRequest
+
+Receive Logout Response
+
+Disconnected-Connection Today
+
+Awaiting Disconnect
+
+Disconnect
+
+Disconnected-Connection Today
+
+Disconnected-Connection Today
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 45 of 68
+
+Response
+
+to
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Test cases
+These test cases are from the perspective of the FIX system being tested. The FIX system receives the “Condition / Stimulus” and is expected to take the
+appropriate action as defined by “Expected Behavior”.
+
+Buyside-oriented (session initiator) Logon and session initiation test case
+Ref
+ID
+
+Test case
+
+Mandatory/
+Optional
+
+Condition/Stimulus
+
+Expected Behavior
+
+Connect and Send Logon
+message
+
+Mandatory
+
+a. Establish Network connection
+
+Successfully open TCP socket with
+counterparty
+
+b. Send Logon message
+
+Send Logon message
+
+c. Valid Logon message as response is
+received
+
+If MsgSeqNum is too high then send
+Resend Request
+
+d. Invalid Logon message is received
+
+1.
+
+Generate an "error" condition in
+test output.
+
+2.
+
+(Optional) Send Reject message
+with RefMsgSeqNum referencing
+Logon message’s MsgSeqNum
+with Text referencing error
+condition
+
+3.
+
+Send Logout message with Text
+referencing error condition
+
+4.
+
+Disconnect
+
+1.
+
+Log an error “first message not a
+logon”
+
+2.
+
+(Optional) Send Reject message
+with RefMsgSeqNum referencing
+message’s MsgSeqNum with Text
+referencing error condition
+
+3.
+
+Send Logout message with Text
+referencing error condition
+
+4.
+
+1B
+
+Precondition
+
+Disconnect
+
+e. Receive any message other than a Logon
+message.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 46 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Sellside-oriented (session acceptor) Logon and session initiation test case
+Ref
+ID
+
+Test case
+
+Mandatory/
+Optional
+
+Condition/Stimulus
+
+Expected Behavior
+
+Receive Logon message
+
+Mandatory
+
+a. Valid Logon message
+
+1.
+
+Respond with Logon response
+message
+
+2.
+
+If MsgSeqNum is too high then
+send Resend Request
+
+b. Logon message received with duplicate
+identity (i.e. same IP, port, SenderCompID,
+TargetCompID, etc. as existing connection)
+
+1.
+
+Generate an "error" condition in
+test output.
+
+2.
+
+Disconnect without sending a
+message (note sending a Reject or
+Logout would consume a
+MsgSeqNum)
+
+c.
+Logon
+message
+received
+with
+unauthenticated/non-configured identity (i.e.
+invalid
+SenderCompID,
+invalid
+TargetCompID, invalid source IP address,
+etc. vs. system configuration)
+
+1.
+
+Generate an "error" condition in
+test output.
+
+2.
+
+Disconnect without sending a
+message (note sending a Reject or
+Logout would consume a
+MsgSeqNum)
+
+d. Invalid Logon message
+
+1.
+
+Generate an "error" condition in
+test output.
+
+2.
+
+(Optional) Send Reject message
+with RefMsgSeqNum referencing
+Logon message’s MsgSeqNum
+with Text referencing error
+condition
+
+3.
+
+Send Logout message with Text
+referencing error condition
+
+4.
+
+1S
+
+Precondition
+
+Disconnect
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 47 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+Receive any message other
+than a Logon message
+
+March 2008
+
+First message received is not a Logon
+message.
+
+Page 48 of 68
+
+1.
+
+Log an error “first message not a
+logon”
+
+2.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Mandatory
+
+Disconnect
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Test cases applicable to all FIX systems
+Ref
+ID
+
+Test case
+
+Mandatory/
+Optional
+
+Condition/Stimulus
+
+Expected Behavior
+
+Receive Message Standard
+Header
+
+Mandatory
+
+a. MsgSeqNum received as expected
+
+Accept MsgSeqNum for the message
+
+b. MsgSeqNum higher than expected
+
+Respond
+message
+
+c. MsgSeqNum lower than expected without
+PossDupFlag set to Y
+
+1.
+
+Whenever
+possible
+it
+is
+recommended that FIX engine
+attempt to send a Logout message
+with a text message of
+“MsgSeqNum too low, expecting
+X but received Y”
+
+2.
+
+(optional) Wait for Logout
+message response (note likely
+will have inaccurate MsgSeqNum)
+or wait 2 seconds whichever
+comes first
+
+3.
+
+Disconnect
+
+4.
+
+Generate an "error" condition in
+test output.
+
+1.
+
+Consider garbled and ignore
+message (do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages.
+
+2.
+
+2
+
+Precondition
+
+Generate a "warning" condition in
+test output.
+
+Exception: SeqReset-Reset
+
+d. Garbled message received
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 49 of 68
+
+with
+
+Resend
+
+Request
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+e. PossDupFlag set to Y; OrigSendingTime
+specified is less than or equal to
+SendingTime and MsgSeqNum lower than
+expected
+
+1.
+
+Check to see if MsgSeqNum has
+already been received.
+
+2.
+
+If already received then ignore
+the message, otherwise accept
+and process the message.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing inaccurate
+SendingTime (>= FIX 4.2:
+SessionRejectReason
+=
+"SendingTime
+acccuracy
+problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Optional
+
+Note: OrigSendingTime should be earlier
+than SendingTime unless the message is
+being resent within the same second during
+which it was sent.
+f. PossDupFlag set to Y; OrigSendingTime
+specified is greater than SendingTime and
+MsgSeqNum as expected
+
+Note: OrigSendingTime should be earlier
+than SendingTime unless the message is
+being resent within the same second during
+which it was sent.
+
+•
+
+Send
+Logout
+message
+referencing
+inaccurate
+SendingTime value
+
+•
+
+(optional) Wait for Logout
+message
+response (note
+likely will have inaccurate
+SendingTime) or wait 2
+seconds whichever comes
+first
+
+•
+
+Disconnect
+
+Generate an "error" condition in test
+output.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 50 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+g.
+PossDupFlag
+set
+to
+OrigSendingTime not specified
+
+Y
+
+and 1.
+
+Note: Always set OrigSendingTime to the
+time when the message was originally sent2.
+not the present SendingTime and set
+PossDupFlag = “Y” when responding to a
+Resend Request
+
+Send
+Reject
+(session-level)
+message referencing missing
+OrigSendingTime (>= FIX 4.2:
+SessionRejectReason = "Required
+tag missing")
+Increment inbound MsgSeqNum
+
+h. BeginString value received as expected
+and specified in testing profile and matches
+BeginString on outbound messages.
+
+Accept BeginString for the message
+
+i. BeginString value (e.g. "FIX.4.2") received
+did not match value expected and specified
+in testing profile or does not match
+BeginString on outbound messages.
+
+1.
+
+Send
+Logout
+message
+referencing incorrect BeginString
+value
+
+2.
+
+(optional) Wait for Logout
+message response (note likely
+will have incorrect BeginString)
+or wait 2 seconds whichever
+comes first
+
+3.
+
+Disconnect
+
+4.
+
+Generate an "error" condition in
+test output.
+
+j. SenderCompID and TargetCompID values
+received as expected and specified in testing
+profile.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 51 of 68
+
+Accept
+SenderCompID
+TargetCompID for the message
+
+and
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+k. SenderCompID and TargetCompID values
+received did not match values expected and
+specified in testing profile.
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+invalid
+SenderCompID or TargetCompID
+(>=
+FIX
+4.2:
+SessionRejectReason = "CompID
+problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Send
+Logout
+message
+referencing
+incorrect
+SenderCompID or TargetCompID
+value
+
+4.
+
+(optional) Wait for Logout
+message response (note likely
+will
+have
+incorrect
+SenderCompID
+or
+TargetCompID) or wait 2 seconds
+whichever comes first
+
+5.
+
+Disconnect
+
+6.
+
+Generate an "error" condition in
+test output.
+
+l. BodyLength value received is correct.
+
+Accept BodyLength for the message
+
+m. BodyLength value received is not correct.
+
+1.
+
+Consider garbled and ignore
+message
+(do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages
+
+2.
+
+Generate a "warning" condition in
+test output.
+
+n. SendingTime value received is specified in
+UTC (Universal Time Coordinated also
+known as GMT) and is within a reasonable
+time (e.g. 2 minutes) of atomic clock-based
+time.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 52 of 68
+
+Accept SendingTime for the message
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+o. SendingTime value received is either not
+specified in UTC (Universal Time
+Coordinated also known as GMT) or is not
+within a reasonable time (e.g. 2 minutes) of
+atomic clock-based time.
+
+Send
+Logout
+referencing
+SendingTime value
+
+(optional) Wait for Logout
+message response (note likely
+will
+have
+inaccurate
+SendingTime) or wait 2 seconds
+whichever comes first
+Disconnect
+
+6.
+
+q. MsgType value received is not valid
+(defined in spec or classified as userdefined).
+
+3.
+
+5.
+
+p. MsgType value received is valid (defined
+in spec or classified as user-defined).
+
+Increment inbound MsgSeqNum
+
+4.
+
+Verify system clocks on both sides are in
+sync and that SendingTime must be current
+time
+
+Send
+Reject
+(session-level)
+message referencing inaccurate
+SendingTime (>= FIX 4.2:
+SessionRejectReason
+=
+"SendingTime
+acccuracy
+problem")
+
+2.
+
+Rationale:
+
+1.
+
+Generate an "error" condition in
+test output.
+
+message
+inaccurate
+
+Accept MsgType for the message
+
+Increment
+MsgSeqNum
+
+3.
+
+Page 53 of 68
+
+Send Reject (session-level)
+message referencing invalid
+MsgType (>= FIX 4.2:
+SessionRejectReason
+=
+"Invalid MsgType")
+
+2.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+1.
+
+Generate
+a
+"warning"
+condition in test output.
+
+inbound
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+r. MsgType value received is valid (defined
+in spec or classified as user-defined) but not
+supported or registered in testing profile.
+
+1) If < FIX 4.2
+a) Send Reject (session-level)
+message referencing valid
+but unsupported MsgType
+2) If >= FIX 4.2
+a) Send Business Message
+Reject message referencing
+valid
+but
+unsupported
+MsgType (>= FIX 4.2:
+BusinessRejectReason
+=
+"Unsupported
+Message
+Type")
+3) Increment inbound MsgSeqNum
+4) Generate a "warning" condition in
+test output.
+
+s. BeginString, BodyLength, and MsgType
+are first three fields of message.
+t. BeginString, BodyLength, and MsgType
+are not the first three fields of message.
+
+Consider garbled and ignore
+message
+(do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages
+Generate a "warning" condition in
+test output.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+a. Valid CheckSum
+
+Accept Message
+
+b. Invalid CheckSum
+
+1.
+
+Consider garbled and ignore
+message
+(do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages
+
+2.
+
+Receive Message Standard
+Trailer
+
+Mandatory
+
+1.
+
+2.
+
+3
+
+Accept the message
+
+Generate a "warning" condition in
+test output.
+
+Page 54 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+c. Garbled message
+
+1.
+
+Consider garbled and ignore
+message
+(do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages
+
+2.
+
+Generate a "warning" condition in
+test output.
+
+d. CheckSum is last field of message, value
+has length of 3, and is delimited by <SOH>.
+e. CheckSum is not the last field of message,
+value does not have length of 3, or is not
+delimited by <SOH>.
+
+Consider garbled and ignore
+message
+(do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages
+Generate a "warning" condition in
+test output.
+
+a. No data sent during preset heartbeat
+interval (HeartBeatInt field)
+
+Send Heartbeat message
+
+b. A Test Request message is received
+
+Send Heartbeat message
+
+Mandatory
+
+1.
+
+2.
+
+4
+
+Accept Message
+
+Send Heartbeat message with Test
+Request message's TestReqID
+
+5
+
+Receive Heartbeat message
+
+Mandatory
+
+Valid Heartbeat message
+
+Accept Heartbeat message
+
+6
+
+Send Test Request
+
+Mandatory
+
+No data received during preset heartbeat
+interval (HeartBeatInt field) + "some
+reasonable period of time" (use 20% of
+HeartBeatInt field)
+
+1.
+
+Send Test Request message
+
+2.
+
+Track and verify that a Heartbeat
+with the same TestReqID is
+received (may not be the next
+message received)
+
+Valid Reject message
+
+1.
+
+Increment inbound MsgSeqNum
+
+2.
+
+Continue accepting messages
+
+7
+
+8
+
+Receive Reject message
+
+Receive Resend
+message
+
+Request
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Mandatory
+
+Mandatory
+
+Valid Resend Request
+
+Respond with application level
+messages and SequenceReset-Gap
+Fill for admin messages in requested
+range
+according
+to
+"Message
+Recovery" rules.
+
+Page 55 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+9
+
+Synchronize
+numbers
+
+sequence
+
+10
+
+Receive Sequence
+(Gap Fill)
+
+Reset
+
+March 2008
+
+Optional
+
+Application failure
+
+Send Sequence Reset - Reset
+message or manually reset to 1 out-ofband.
+
+Mandatory
+
+a. Receive Sequence Reset (Gap Fill)
+message with NewSeqNo > MsgSeqNum
+
+Issue Resend Request to fill gap
+between last expected MsgSeqNum &
+received MsgSeqNum.
+
+and
+MsgSeqNum > than expect sequence number
+b. Receive Sequence Reset (Gap Fill)
+message with NewSeqNo > MsgSeqNum
+
+Set next expected sequence number =
+NewSeqNo
+
+and
+MsgSeqNum = to expected sequence number
+c. Receive Sequence Reset (Gap Fill)
+message with NewSeqNo > MsgSeqNum
+
+Ignore message
+
+and
+MsgSeqNum < than expected sequence
+number
+and
+PossDupFlag = “Y”
+d. Receive Sequence Reset (Gap Fill)
+message with NewSeqNo > MsgSeqNum
+and
+MsgSeqNum < than expected sequence
+number
+and
+without PossDupFlag = “Y”
+
+1) If possible send a Logout
+message
+with
+text
+of
+“MsgSeqNum too low, expecting
+X received Y,” prior to
+disconnecting FIX session.
+2) (optional) Wait for Logout
+message response (note likely
+will have inaccurate MsgSeqNum)
+or wait 2 seconds whichever
+comes first
+3) Disconnect
+4) Generate an "error" condition in
+test output
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 56 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+e. Receive Sequence Reset (Gap Fill)
+message with NewSeqNo <= MsgSeqNum
+and
+
+Send Reject (session-level) message
+with message “attempt to lower
+sequnce number, invalid value
+NewSeqNum=<x>”
+
+MsgSeqNum = to expected sequence number
+11
+
+Receive
+(Reset)
+
+Sequence
+
+Reset
+
+Mandatory
+
+a. Receive Sequence Reset (reset) message
+with NewSeqNo > than expected sequence
+number
+
+1) Accept the Sequence Reset
+(Reset) message without regards
+to its MsgSeqNum
+2) Set expected sequence number
+equal to NewSeqNo
+
+b. Receive Sequence Reset (reset) message
+with NewSeqNo = to expected sequence
+number
+
+1) Accept the Sequence Reset
+(Reset) message without regards
+to its MsgSeqNum
+2) Generate a "warning" condition in
+test output.
+
+c. Receive Sequence Reset (reset) message
+with NewSeqNo < than expected sequence
+number
+
+1) Accept the Sequence Reset
+(Reset) message without regards
+to its MsgSeqNum
+2) Send
+Reject
+(session-level)
+message
+referencing
+invalid
+MsgType
+(>=
+FIX
+4.2:
+SessionRejectReason = "Value is
+incorrect (out of range) for this
+tag")
+3) Do NOT Increment
+MsgSeqNum
+
+inbound
+
+4) Generate an "error" condition in
+test output
+5) Do
+NOT
+lower
+sequence number.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 57 of 68
+
+expected
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+12
+
+March 2008
+
+Initiate logout process
+
+Mandatory
+
+Initiate Logout
+
+1) Send Logout message
+2) Wait for counterparty to respond
+with Logout message up to 10
+seconds (note may not be
+received
+if
+communications
+problem exists). If not received,
+generate a “warning” condition in
+test output.
+3) Disconnect
+
+2.
+
+Wait
+for
+counterparty
+to
+disconnect up to 10 seconds. If
+max exceeded, disconnect and
+generate an “error” condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing invalid tag
+number
+(>=
+FIX
+4.2:
+SessionRejectReason = "Invalid
+tag number")
+Increment inbound MsgSeqNum
+Generate an "error" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing required tag
+missing
+(>=
+FIX
+4.2:
+SessionRejectReason = "Required
+tag missing")
+Increment inbound MsgSeqNum
+
+3.
+
+Mandatory
+
+Send Logout response message
+
+2.
+
+or
+
+1.
+
+3.
+
+Receive
+application
+administrative message
+
+Disconnect without sending a message
+
+2.
+
+14
+
+Mandatory
+
+Receive Logout message
+
+a. Receive valid Logout message in response
+to a solicited logout process
+b. Receive
+unsolicitied
+
+13
+
+Generate an "error" condition in
+test output.
+
+valid
+
+Logout
+
+message
+
+a. Receive field identifier (tag number) not
+defined in specification.
+Exception: undefined tag used is specified in
+testing profile as user-defined.
+
+b. Receive message with a required field
+identifier (tag number) missing.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 58 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+c. Receive message with field identifier (tag
+number) which is defined in the specification
+but not defined for this message type.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing tag not
+defined for this message type (>=
+FIX 4.2: SessionRejectReason =
+"Tag not defined for this message
+type")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing tag specified
+without a value (>= FIX 4.2:
+SessionRejectReason = "Tag
+specified without a value")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing value is
+incorrect (out of range or not part
+of valid list of enumerated values)
+for this tag (>= FIX 4.2:
+SessionRejectReason = "Value is
+incorrect (out of range) for this
+tag")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+Exception: undefined tag used is specified in
+testing profile as user-defined for this
+message type.
+
+d. Receive message with field identifier (tag
+number) specified but no value (e.g.
+"55=<SOH>" vs. "55=IBM<SOH>").
+
+e. Receive message with incorrect value (out
+of range or not part of valid list of
+enumerated values) for a particular field
+identifier (tag number).
+Exception: undefined enumeration values
+used are specified in testing profile as userdefined.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 59 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+f. Receive message with a value in an
+incorrect data format (syntax) for a particular
+field identifier (tag number).
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing incorrect
+message
+structure
+header+body+trailer (>= FIX 4.3:
+SessionRejectReason = “Tag
+specified out of required order”)
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing duplicate
+field identifier (tag number) (>=
+FIX 4.3: SessionRejectReason =
+“Tag appears more than once”)
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Page 60 of 68
+
+Generate an "error" condition in
+test output.
+
+2.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Increment inbound MsgSeqNum
+
+3.
+
+h. Receive a message in which a field
+identifier (tag number) which is not part of a
+repeating group is specified more than once
+
+Send
+Reject
+(session-level)
+message referencing value is in
+an incorrect data format for this
+tag
+(>=
+FIX
+4.2:
+SessionRejectReason = "Incorrect
+data format for value")
+
+2.
+
+g. Receive a message in which the following
+is not true: Standard Header fields appear
+before Body fields which appear before
+Standard Trailer fields.
+
+1.
+
+Generate an "error" condition in
+test output.
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+i. Receive a message with repeating groups
+in which the "count" field value for a
+repeating group is incorrect.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing the repeating
+group with incorrect field
+ordering
+(>=
+FIX
+4.3:
+SessionRejectReason
+=
+“Repeating group fields out of
+order”)
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+field
+identifier (tag number) with
+embedded <SOH> (>= FIX 4.3:
+SessionRejectReason = “Non
+“data” value includes field
+delimiter (SOH character)”)
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+k. Receive a message with a field of a data
+type other than "data" which contains one or
+more embedded <SOH> values.
+
+Send
+Reject
+(session-level)
+message referencing the incorrect
+"count" field identifier (tag
+number)
+(>=
+FIX
+4.3:
+SessionRejectReason = “Incorrect
+NumInGroup count for repeating
+group”)
+
+2.
+
+j. Receive a message with repeating groups
+in which the order of repeating group fields
+does not match the specification.
+
+1.
+
+Generate an "error" condition in
+test output.
+
+?? Discard as valid response/outcome
+too
+or
+Consider garbled and ignore message
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 61 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+l. Receive a message when application-level
+processing or system is not available
+(Optional)
+
+1) If < FIX 4.2
+a) Send Reject (session-level)
+message
+referencing
+application
+message
+processing is not available
+2) If >= FIX 4.2
+a) Send Business Message
+Reject message referencing
+application
+message
+processing is not available
+(>=
+FIX
+4.2:
+BusinessRejectReason
+=
+"Application not available")
+3) Increment inbound MsgSeqNum
+4) Generate a "warning" condition in
+test output.
+
+m. Receive a message in which
+conditionally required field is missing.
+
+a
+
+1) If < FIX 4.2
+a) Send Reject (session-level)
+message referencing field
+identifier (tag number) of the
+missing
+conditionally
+required field(s)
+2) If >= FIX 4.2
+a) Send Business Message
+Reject message referencing
+field identifier (tag number)
+of the missing conditionally
+required field(s) (>= FIX 4.2:
+BusinessRejectReason
+=
+"Conditionally
+Required
+Field Missing")
+3) Increment inbound MsgSeqNum
+4) Generate an "error" condition in
+test output.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 62 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+N. Receive a message in which a field
+identifier (tag number) appears in both
+cleartext and encrypted section but has
+different values.
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+field
+identifier (tag number) missing
+from unencrypted section (>=
+FIX 4.2: SessionRejectReason = "
+Decryption problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+Generate an "error" condition in test
+output.
+15
+
+Send
+application
+or
+administrative messages to
+test normal and abnormal
+behavior/response
+
+16
+
+Queue outgoing messages
+
+Send more than one message of the same
+type with header and body fields ordered
+differently to verify acceptance. (Exclude
+those which have restrictions regarding
+order)
+Mandatory
+
+Messages accepted and subsequent
+messages’ MsgSeqNum are accepted.
+
+a. Message to send/queue while disconnected
+
+Queue outgoing messages. Note there
+are two valid approaches:
+1) Queue without
+MsgSeqNum
+a)
+
+regards
+
+to
+
+Store data for messages
+
+2) Queue each message with the
+next MsgSeqNum value
+a)
+
+Store data for messages in
+such a manner as to use and
+“consume”
+the
+next
+MsgSeqNum
+
+Note: SendingTime (Tag#52): must
+contain the time the message is sent
+not the time the message was queued.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 63 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+b. Re-connect with queued messages
+
+1.
+
+Complete logon process (connect,
+and Logon message exchange)
+
+2.
+
+Complete MsgSeqNum recovery
+process if applicable.
+
+3.
+
+Recommended short delay or
+TestRequest/Heartbeat to verify
+MsgSeqNum recovery completed.
+
+4.
+
+Note there are two valid queuing
+approaches:
+a)
+
+Queue without regards to
+MsgSeqNum
+i)
+
+Send queued messages
+with new MsgSeqNum
+values (greater than
+Logon
+message’s
+MsgSeqNum)
+
+b) Queue each message with the
+next MsgSeqNum value
+i)
+
+(note Logon message’s
+MsgSeqNum will be
+greater than the queued
+messages' MsgSeqNum)
+
+ii) Counterparty will issue
+ResendRequest
+requesting the range of
+missed messages
+iii) Resend each queued
+message
+with
+PossDupFlag set to Y
+
+Note: SendingTime (Tag#52): must
+contain the time the message is sent
+not the time the message was queued.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 64 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+Respond with Logon message
+with the same EncryptMethod
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing invalid or
+unsupported
+EncryptMethod
+value
+(>=
+FIX
+4.2:
+SessionRejectReason
+=
+"Decryption problem")
+Increment inbound MsgSeqNum
+Send
+Logout
+message
+referencing
+invalid
+or
+unsupported
+EncryptMethod
+value
+(optional) Wait for Logout
+message response (note could
+have decrypt problems) or wait 2
+seconds whichever comes first
+
+5.
+
+Disconnect
+
+6.
+
+b. Receive Logon message with invalid or
+unsupported EncryptMethod
+
+Perform
+the
+decryption
+and
+method readiness
+
+4.
+
+a. Receive Logon message with valid,
+supported EncryptMethod
+
+2.
+
+3.
+
+Optional
+
+Accept the message
+
+2.
+
+Support encryption
+
+1.
+
+3.
+
+17
+
+Generate an "error" condition in
+test output.
+
+appropriate
+encryption
+
+c.
+Receive
+message
+with
+valid
+SignatureLength and Signature values.
+d.
+Receive
+message
+SignatureLength value.
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+invalid
+SignatureLength value (>= FIX
+4.2:
+SessionRejectReason
+=
+"Signature problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Accept the message
+
+Generate an "error" condition in
+test output.
+
+with
+
+invalid
+
+Page 65 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+e. Receive message with invalid Signature
+value.
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+invalid
+Signature value (>= FIX 4.2:
+SessionRejectReason
+=
+"Signature problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+Or consider decryption error or
+message out of order, ignore message
+(do
+not
+increment
+inbound
+MsgSeqNum) and continue accepting
+messages
+f. Receive message with a valid
+SecureDataLen value and a SecureData
+value that can be decrypted into valid, parseable cleartext.
+
+Accept the message
+
+g.
+Receive
+message
+SecureDataLen value.
+
+1.
+
+Consider decryption error or
+message out of order, ignore
+message
+(do not increment
+inbound
+MsgSeqNum)
+and
+continue accepting messages
+
+2.
+
+Generate a "warning" condition in
+test output.
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+invalid
+SecureData value (>= FIX 4.2:
+SessionRejectReason
+=
+"
+Decryption problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+with
+
+invalid
+
+h. Receive message with a SecureData value
+that cannot be decrypted into valid, parseable cleartext.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 66 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+March 2008
+
+i. Receive message with one or more fields
+not present in the unencrypted portion of the
+message that "must be unencrypted"
+according to the spec.
+
+party
+
+Optional
+
+a.
+Receive
+messages
+OnBehalfOfCompID and
+
+with
+
+1.
+
+Send
+Reject
+(session-level)
+message referencing incorrect
+handling of "left over" characters
+during encryption (>= FIX 4.2:
+SessionRejectReason
+=
+"
+Decryption problem")
+Increment inbound MsgSeqNum
+
+3.
+
+third
+
+Generate an "error" condition in
+test output.
+
+2.
+
+Support
+addressing
+
+Increment inbound MsgSeqNum
+
+5.
+
+18
+
+Send
+Reject
+(session-level)
+message
+referencing
+field
+identifier (tag number) missing
+from unencrypted section (>=
+FIX 4.2: SessionRejectReason = "
+Decryption problem")
+
+4.
+
+j. Receive message with incorrect handling
+of "left over" characters (e.g. when length of
+clear text prior to encryption is not a multiple
+of 8) according to the specified
+EncryptMethod.
+
+3.
+
+Generate an "error" condition in
+test output.
+
+Accept messages
+
+DeliverToCompID values expected as
+specified in testing profile and with correct
+usage.
+b.
+Receive
+messages
+OnBehalfOfCompID or
+
+with
+
+1.
+
+Send
+Reject
+(session-level)
+message
+referencing
+invalid
+OnBehalfOfCompID
+or
+DeliverToCompID (>= FIX 4.2:
+SessionRejectReason = "CompID
+problem")
+
+2.
+
+Increment inbound MsgSeqNum
+
+3.
+
+Generate an "error" condition in
+test output.
+
+DeliverToCompID values not specified in
+testing profile or incorrect usage.
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Page 67 of 68
+
+Version 1.1 Errata − FIX SESSION PROTOCOL
+
+19
+
+Simultaneous Resend request
+test
+
+© Copyright, 2006-2008, FIX Protocol, Limited
+
+Mandatory
+
+Mandatory
+
+a. Receive message with PossResend = “Y”
+and application-level check of Message
+specific ID indicates that it has already been
+seen on this session
+
+1.
+
+Ignore the message.
+
+2.
+
+Generate a "warning" condition in
+test output
+
+b. Receive message with PossResend = “Y”
+and application-level check of Message
+specific ID indicates that it has NOT yet
+been seen on this session
+20
+
+Test PossResend handling
+
+March 2008
+
+1.
+
+Accept and process the message
+normally.
+
+Receive a Resend Request message while
+having sent and awaiting complete set of
+responses to a Resend Request message.
+
+1.
+
+Perform resend
+messages.
+
+2.
+
+Send Resend Request to request
+missed messages
+
+Page 68 of 68
+
+of
+
+requested
+
+
