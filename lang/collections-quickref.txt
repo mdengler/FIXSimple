@@ -1,0 +1,56 @@
+From
+http://lalitpant.blogspot.com/2007/07/java-collections-quickref.html
+
+
+Java Collections QuickRef
+As of version 6.0, Java contains a large number of Collection classes. In this post, I have attempted to categorize a useful subset of these classes on the basis of general usage scenarios:
+If you want to manage a Sequence of elements, and the sequence is:
+
+Unordered, use a Set
+If you do not need thread safety - use a HashSet
+If you need thread safety:
+Use a CopyOnWriteArraySet (under special conditions: small Set sizes and a very high read/write ratio)
+Or wrap a HashSet with a lock (Collections.synchronizedSet() can be used for this)
+Ordered:
+If the order is External, use a List
+If you do not need thread safety - use an ArrayList or LinkedList
+If you need thread safety:
+Use a CopyOnWriteArrayList (under special conditions: small List sizes and a very high read/write ratio)
+Or wrap a List with a lock (Collections.synchronizedList() can be used for this)
+If the order is Internal, use a SortedSet (an internal order is based on a 'natural' order relation defined on the elements of a container)
+If you do not need thread safety - use a TreeSet
+If you need thread safety - use a ConcurrentSkipListSet
+If you want to manage a Mapping of keys to values, and the mapping needs to be:
+
+Unordered, use a Map
+If you do not need thread safety - use a HashMap
+If you need thread safety - use a ConcurrentHashMap
+Ordered (because you need to iterate through the container in a specified order)
+If the order is External, use a Map
+If you do not need thread safety - use a LinkedHashMap
+If you need thread safety - wrap a LinkedHashMap with a lock (Collections.synchronizedMap() can be used for this)
+If the order is Internal, use a SortedMap (an internal order is based on a 'natural' order relation defined on the elements of a container)
+If you do not need thread safety - use a TreeMap
+If you need thread safety - use a ConcurrentSkipListMap
+If you want to Hold elements for future processing:
+
+If you do not need thread safety, use a Queue or Deque
+If you want:
+FIFO/LIFO ordering - use an ArrayDeque
+Priority based ordering - use a PriorityQueue
+If you need thread safety in (a producer-consumer situation), use a BlockingQueue or BlockingDeque
+If you want:
+FIFO/LIFO ordering - use a LinkedBlockingQueue or LinkedBlockingDeque
+Priority based ordering - use a PriorityBlockingQueue
+
+
+The following table presents the Big-Oh time-complexity of common Collection operations for some of the core implementation classes:
+
+           append   insert   member      access   successor   head      pop
+Category   add(e)  add(i,e)  contains   get(...)  it.next() remove(0) .remove()
+--------   ------  --------  ---------  --------  --------  --------  ---------
+ArrayList     1       n          n          1         1         n         n
+LinkedList    1       n          n          n         1         1         1
+Hash table    1                  1          1        h/n                  1
+Tree        log n              log n      log n     log n               log n
+Skip list   log n              log n      log n       1                 log n

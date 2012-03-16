@@ -1,0 +1,439 @@
+Location: http://javarevisited.blogspot.com/2010/12/fix-protocol-interview-questions.html                                                             
+TIBCO RV FIX PROTOCOL JAVA TUTORIAL
+
+Java Tutorial Example, Unix commands, Interview Questions, FIX Protocol, Tibco RV tutorials, Equities trading system, electronic trading system
+development
+
+#
+#
+
+Tuesday, December 21, 2010
+
+Financial Information Exchange (FIX) Protocol Interview Questions Answers
+
+Financial Information Exchange (FIX) Protocol Interview Questions and Answers
+Some more Fix protocol interview question , I will put answer along when I'll get some time for now just questions :) 
+
+Now I have updated it with answer, Please let me know if you have any doubt, or you have other questions, you can also contribute by any question
+asked during any FINANCIAL INFORMATION EXCHANGE (FIX)  protocol interview.
+
+FIX Protocol Interview Question and Answers
+
+What do you mean by Warrant?
+Warrant is a financial product which gives right to holder to Buy or Sell underlying financial security, its similar to option with some differences
+e.g. Warrants are normally issued by banks while options are primarily traded in exchange.
+
+What is mean by Settlement of Securities? When Settlement does occur?
+In Simple term Settlement means money will deducted from buyers and account and security(Shares) will be credited to his account , normally
+Settlement occurs after few days of trade date for most of the exchange its T+3 (i.e. Three days after trade date) , T denotes Trade date means the
+date on which transaction has taken place.
+For some of the exchanges e.g. NSE India, SEHK Hongkong its T+2.
+
+What is NewOrderSingle, OrderCancelReplance and OrderCancel Reject message?
+These are the basic, most commonly used messages in Electronic trading via FINANCIAL INFORMATION EXCHANGE (FIX) protocol.
+NewOrderSingle message is denoted by MsgType=D and its used to place an Order, OrderCancelReplace Request is modification request denoted by MsgType=
+G in FINANCIAL INFORMATION EXCHANGE (FIX) protocol and used to modify Order e.g for changing quantity or price of Order.
+
+OrderCancelRequest is third in this category denoted by MsgType=F in FINANCIAL INFORMATION EXCHANGE (FIX) protocol and used to cancel Order placed
+into Market.
+
+What are most common issues encounter when two FIX Engine communicates ?
+When Clients connect to broker via FINANCIAL INFORMATION EXCHANGE (FIX) protocol, there FIX engine connects to each other, while setting up and
+during further communication many issues can occur below are some of most common ones:
+Issues related to network connectivity
+Issues related to Firewall rules
+Issue related to incorrect host/port name while connecting.
+Incorrect SenderCompID and TargetCompID
+Sequence Number mismatch
+Issue related to FINANCIAL INFORMATION EXCHANGE (FIX) version mismatch
+
+What do you mean by Incoming Sequence No and Outgoing Sequence No? Which tag is used to carry Sequence No?
+Sequence Number is very important concept of FINANCIAL INFORMATION EXCHANGE (FIX) protocol which essentially provides it Recovery and replay
+functionality and ensures that no message will lose during transmission or communication. In FINANCIAL INFORMATION EXCHANGE (FIX) protocol every
+message contains a unique sequence number defined in tag 34. Logically we can divide sequence number into two Incoming and Outgoing Sequence number. 
+Incoming sequence number is the number any FIX Engine expecting from Counter Party and Outgoing sequence number is the number any FIX engine is
+sending to Counter Party.
+
+What happens if Client connects with Sequence No higher than expected?
+If Client FIX Engine connects to Broker Fix Engine with Sequence Number higher than expected (e.g. broker is expecting Sequence Number = 10 and
+Client is sending = 15). As per FINANCIAL INFORMATION EXCHANGE (FIX)  protocol Broker will accept the connection and issue a Resend Request (MsgType=
+2) asking Client to resend missing messages (from messages 10 -15) , Now Client can either replay those messages or can issue a Gap Fill Message
+(MsgType=4 as per FINANCIAL INFORMATION EXCHANGE (FIX)  protocol) in case replaying those messages  doesn't make any sense (could be admin messages
+e.g. Heartbeat etc).
+
+What do you mean by Funari Order type?
+Funari is very popular Order type commonly used in Japanese and Korean market , its denoted by OrdType=I  in FIX protocol , In Funari Order type
+Order will remain in Market as Limit Order but during Market Closing period , if there is any unexecuted quantity then it will turn into a Market
+Order.
+
+What do you mean by Odd lot and Board lot?
+In Exchanges every Security traded in lot e.g. lot of 1, 10 or 100 or 1000. These are called Board lots and while placing order clients need to send
+Order quantity multiple of Board lot. If Clients sends any Order which is not a multiple of Board lot then its called Odd lot.
+
+What happens if Client connects with Sequence No lower than expected?
+If Client FIX engine connects to broker FIX engine with Sequence No lower than expected than broker FIX engine will disconnect the connection. As per
+FINANCIAL INFORMATION EXCHANGE (FIX) protocol client then may try by increasing its sequence Number until broker accepts its connection.
+
+What is the difference between PossDup and PossResend?
+As per FINANCIAL INFORMATION EXCHANGE (FIX) protocol PossDupFlag (tag 43): indicates possible retransmission of message with this sequence number
+valid value:
+                                    Y = Possible duplicate
+                                    N = Original transmission
+
+PossResend (tag 97): Indicates that message may contain information that has been sent under another sequence number.
+                                    Valid Values:
+                                    Y=Possible resend
+                                    N=Original transmission
+
+In Simple terms PossDup is when you are resending a message and PossResend is when you are sending a new message with same data you have already sent
+in a previous message.
+
+Let’s consider below use case for clarity with PossDup, you can send out an order with Sequence number of 10. Then you send another message with a
+number of 11. For some reason the counter party did not receive message 10 and will request a resend. You will then resend this same message with a
+sequence number of 10 marking tag 43=Y.
+
+In case of PossResend, you may send out an order, again let's say with a sequence number of 10. After 5 seconds, you have not gotten an
+acknowledgement. So you may decide to try again because maybe the counterparty didn't receive or got the first time. So you will send out a message
+with a different sequence number like 11, which will contain all of the same data message number 10 did. You will then mark it as a PossResend. So
+this is saying you have already sent this order before, which Counter party may or may not have processed.
+
+While handling of PossDups is dictated by session logic, PossResends are dictated by buisiness logic (e.g. Reject an Order if ClOrdID is duplicate
+etc). This is because it is up to the business layer to determine if a particular business object has been processed (by checking the order id for
+instance).
+
+You have bought a stock at INR 100 and want to sell it as soon as it hits INR 110. If you want to guarantee that your sell order is filled, which of
+the following types of order should you place?
+In this case you can not use limit order because limit order doesn't guarantee execution if there are similar LIMIT order exists then it will wait
+for its turn. You can not either use Market Order because it didn't give you Price guarantee and will fill on current price. Solution is to use
+"STOP" order with stop price 110, as soon as price reaches 110 it will get activate but in case of high volatility it can fill more or less 110 if
+price is moving very fast.
+
+Which of the following orders would be automatically canceled if not executed immediately?
+Fill or Kill (FOK) and Immediate or Cancel (IOC) orders are types of order which either executed immediately or get cancelled by exchange.
+TimeInForce (tag 59) in FINANCIAL INFORMATION EXCHANGE (FIX) protocol is used to mark an order as FOK or IOC.
+
+What is the difference between FOK order and IOC Order?
+Main difference between FOK and IOC Order is that FOK demands full execution of order i.e. all quantity has to be filled while IOC order is ready to
+accept partial fills also?
+
+What is STP (Straight through Processing) Systems?
+STP is abbreviation of "Straight though processing" which denotes trading systems which requires either no manual interaction or some manual
+interaction for whole trade life cycle e.g. everything after submission of Order e.g. processing, execution, booking, allocation, settlement occurs
+automatically.
+
+NON STP systems require manual interaction on some phases of trade life cycle e.g. booking or settlement.
+
+To learn more about FINANCIAL INFORMATION EXCHANGE (FIX) protocol read my FINANCIAL INFORMATION EXCHANGE (FIX) protocol tutorial series 
+
+Related post:
+
+  * Top 20 FIX Protocol Interview Questions
+  * FIX protocol and fix messaging interview questions
+  * Interview question asked on FINANCIAL INFORMATION EXCHANGE (FIX) Protocol
+  * FIX Protocol Tutorial for beginners
+  * FIX Protocol Session or Admin messages tutorial
+  * Fix Session is not connecting how to diagnose it?
+
+Please vote +1 or consider sharing if your like this article
+
+Posted by Javin Paul at 4:40 AM # #
+Email ThisBlogThis!Share to TwitterShare to Facebook
+Labels: FIX Protocol interview questions, FIX protocol tutorial
+
+13 comments:
+
+Barbara said...
+   
+    Hi
+   
+    Tks very much for post:
+   
+    I like it and hope that you continue posting.
+   
+    Let me show other source that may be good for community.
+   
+    Source: Financial interview questions
+   
+    Best rgs
+    David
+   
+    December 29, 2010 11:26 PM [icon_delet]
+Anonymous said...
+   
+    Javin,
+   
+    Good article , Can you let us know how does FIX engine find out FIX message is for FIX4.2 or FIX4.0 ? Can you give an example of FIX message also
+    ?
+   
+    January 29, 2011 5:45 AM [icon_delet]
+Anonymous said...
+   
+    Is there any FIX protocol API exists just like Java API for coding ? I heard about Quick FIX is that a FIX api ?
+   
+    January 29, 2011 5:47 AM [icon_delet]
+Javin @ Tibco RV Tutorial said...
+   
+    Hi,
+   
+    Quick FIX is a FIX protocol implementation you can use.though there are other commercial FIX Engine are available e.g. NYFIX Appia or Cameron FIX
+    Engine.
+   
+    Thanks
+    Javin
+   
+    February 2, 2011 12:08 AM [icon_delet]
+Ketan said...
+   
+    Is FIX interface is same as FIX specification or fix api ?
+   
+    February 2, 2011 8:33 PM [icon_delet]
+Anonymous said...
+   
+    Hi, how do you know that a particular FIX message is from which version i.e. FIX4.2 or FIX 4.4. I am new to FIX protocol and been confused with
+    these FIX versions.
+   
+    February 3, 2011 4:03 AM [icon_delet]
+Javin @ Tibco RV Tutorial said...
+   
+    Hi Ketan,
+    FIX specification is details about a particular FIX protocol version e.g. FIX4.2 while FIX interface is FIX api which is used to write FIX engine
+    or provide FIX support to application e.g. Quick FIX or Cameron FIX library or Nyfix Appia.
+   
+    Thanks
+    Javin
+   
+    February 3, 2011 9:16 AM [icon_delet]
+Javin @ Tibco RV Tutorial said...
+   
+    Hi Anonymous,
+    FIX tag 8 called BeginString is used to identify FIX protocol version of a FIX message. this is the first tag in any FIX message and mandatory
+    and its value must be valid FIX version. if this tag is not present then FIX engine will not process such messages.
+   
+    Thanks
+    Javin
+   
+    February 3, 2011 9:18 AM [icon_delet]
+Vivek said...
+   
+    Hi, I heard we can trade futures and option using FIX protocol. my question is that how do you know that this NewORderSingle message is for
+    Equities or for Futures or options ? is there any particular tag in FIX protocol to denote this ?
+   
+    February 4, 2011 5:26 AM [icon_delet]
+Chris said...
+   
+    yes there are specific tags that give away whether it is a future/option or equity - a future will have a maturity month/year (tag 200)and will
+    have a security type (tag 167) set to FUT. An option will have a strike price(tag 202) and tag 167=OPT. You might also see CFI codes (tag 461)in
+    the FIX messages for futures and options (FXXXXX or OPXXXX). Equities orders will not have these tags however they will use the same 35=D
+    message.
+   
+    February 24, 2011 2:39 AM [icon_delet]
+Javin @ FIX Protocol Tutorial said...
+   
+    Hi Chris,
+    Thanks for answering Vivek's question and adding value into the blog by your valuable comments.
+   
+    Javin
+   
+    February 24, 2011 7:27 PM [icon_delet]
+Anonymous said...
+   
+    Hey,
+    Its really good.............plz keep posting and also send some questions regarding trading.....
+   
+    Thanks...
+    Roshan
+   
+    July 12, 2011 10:14 AM [icon_delet]
+Anonymous said...
+   
+    HI are there any compnies in inida wch use fix protocol?
+   
+    January 18, 2012 3:28 AM [icon_delet]
+
+Post a Comment
+
+Newer Post Older Post Home
+Subscribe to: Post Comments (Atom)
+#
+
+What is this blog about
+
+This blog is about my experience in Java, Tibco Rendezvous and FIX protocol. FIX is a technology which is used to build equity trading system and
+heavily used in electronic trading , high frequency trading and Algorithmic trading, so on most of Investment bank job you need to know FIX Protocol
+on the other hand Tibco Rendezvous is used to implement messaging backbone on many big commercial and global banks. This blog help you to get clear
+any FIX protocol job interview. It also includes Java and Tibco Rendezvous article written for new user mainly my experience in my own word.
+#
+
+Labels
+
+ant tutorials (3) core java (162) core java interview question (33) database (7) Eclipse (4) FIX protocol (1) FIX Protocol interview questions (4) 
+FIX protocol tutorial (15) general (12) interview questions (11) jsp-servlet (17) linux (19) mysql (7) programming (1) tibco (15) unix (19) xml (4)
+#
+Loading
+#
+
+Recent Posts
+
+#
+#
+
+Follow Us
+
+Follow @javinpaul
+#
+
+Subscribe To This Blog Free
+
+[arrow_drop] [icon_feed1] Posts
+[subscribe-] [subscribe-] [subscribe-] [subscribe-] [icon_feed1] Atom
+[arrow_drop] [icon_feed1] Posts
+[arrow_drop] [icon_feed1] Comments
+[subscribe-] [subscribe-] [subscribe-] [subscribe-] [icon_feed1] Atom
+[arrow_drop] [icon_feed1] Comments
+#
+
+Subscribe by email:
+
+[                    ][Subscribe]
+#
+#
+
+Popular Posts
+
+  * 3 ways to resolve NoClassDefFoundError in Java
+  * 10 Example of find command in Unix and Linux
+  * How HashMap works in Java
+  * How Garbage Collection works in Java
+  * 10 example of using ArrayList in Java >>> Java ArrayList Tutorial
+  * 10 points about Java Heap Space or Java Heap Memory
+  * How to Set Classpath for Java on Windows Unix and Linux
+  * 2 solution of java.lang.OutOfMemoryError in Java
+  * Top 20 Core Java Interview questions asked in Investment Bank
+  * How Synchronization works in Java ? Example of synchronized block
+
+#
+#
+
+Followers
+
+#
+#
+
+Blog Archive
+
+  * ►  2012 (69)
+      + ►  March (16)
+          o Why character array is better than String for Stor...
+          o JDBC - java.lang.ClassNotFoundException: com.mysql...
+          o Mixing static and non static synchronized method -...
+          o What is GET and POST method in HTTP and HTTPS Prot...
+          o What is Static and Dynamic binding in Java with Ex...
+          o 10 points on finalize method in Java – Tutorial Ex...
+          o What is Encapsulation in Java and OOPS with Exampl...
+          o 10 example of chmod command in UNIX Linux
+          o Top 10 EJB Interview Question and Answer asked in ...
+          o java.lang.UnsatisfiedLinkError: no dll in java.lib...
+          o How to read Properties File in Java – XML and Text...
+          o How to add or list certificates from keystore or t...
+          o 10 Object Oriented Design principles Java programm...
+          o java.lang.NoSuchMethodError: main Exception in thr...
+          o How to create and execute JAR file in Java – Comma...
+          o How to format Decimal Number in Java - DecimalForm...
+      + ►  February (18)
+          o Java Mistake 1 - Using float and double for moneta...
+          o How to convert Char to String in Java with Example...
+          o How to check or detect duplicate elements in Array...
+          o How to solve java.util.NoSuchElementException in J...
+          o How to set JAVA_HOME environment in Linux, Unix an...
+          o What is Race Condition in multithreading – 2 Examp...
+          o JSTL set tag or <c:set> examples in JSP – Java J2E...
+          o Difference between throw and throws in Exception h...
+          o Difference between LinkedList vs ArrayList in Java...
+          o How to encode decode String in Java base64 Encodin...
+          o Producer Consumer Design Pattern with Blocking Que...
+          o Why non-static variable cannot be referenced from ...
+          o fail-safe vs fail-fast Iterator in Java
+          o How to fix java.lang.ClassNotFoundException: org.a...
+          o What is blocking methods in Java and how do deal w...
+          o Why wait, notify and notifyAll is defined in Objec...
+          o 3 Example to Compare two Dates in Java
+          o Difference between instance class and local variab...
+      + ►  January (35)
+          o How to reverse String in Java using Iteration and ...
+          o Sudden Drop in Traffic? Could be Google page layou...
+          o How to get and set default Character encoding or C...
+          o How to define Error page in Java Web Application -...
+          o How to fix java.sql.SQLException: Invalid column i...
+          o Difference between Thread vs Runnable interface in...
+          o Top 10 Google Interview questions answers
+          o How to find if JVM is 32 or 64 bit from Java progr...
+          o What is Constructor overloading in Java with Examp...
+          o Difference between Serializable and Externalizable...
+          o Difference between URL-rewriting URL-encoding in S...
+          o How to get max memory, free memory and total memor...
+          o Where to use Assertion in Java Code
+          o How to enable or disable Assertion in Java
+          o 4 tips to improve performance of Java application ...
+          o How to Sort Array in Java ascending and descending...
+
+  * ►  2011 (152)
+      + ►  December (30)
+      + ►  November (14)
+      + ►  October (14)
+      + ►  September (22)
+      + ►  August (11)
+      + ►  July (8)
+      + ►  June (9)
+      + ►  May (6)
+      + ►  April (10)
+      + ►  March (6)
+      + ►  February (11)
+      + ►  January (11)
+
+  * ▼  2010 (36)
+      + ▼  December (5)
+          o Happy New Year 2011
+          o Financial Information Exchange (FIX) Protocol Inte...
+          o Common issue on financial information exchange (FI...
+          o FIX protocol and fix messaging interview questions...
+          o Interview question asked on Financial Information ...
+      + ►  October (31)
+
+#
+
+Some of Old Post you may like
+
+  * FIX Protocol Interview Questions
+  * FIX Protocol Tutorial
+  * Grep command in Unix Examples
+  * Hashtable vs HashMap
+  * How to create soft link in Unix
+  * Java Enum Examples
+  * java logging tutorial
+  * java serialization interview question
+  * java.lang.unsrupportedClassVersionError in Java
+  * mysql commands tutorials
+  * Singleton Pattern in Java
+  * String vs StringBuffer vs StringBuilder
+  * thread interview question
+  * tibco tutorial
+  * Unix commands tutorials
+  * wait and notify in java
+  * Why String is immutable in Java
+
+#
+Copyright by Javin Paul 2012. Powered by Blogger.
+#
+
+MEET THE AUTHOR
+
+Javin Paul is a professional working in Java, FIX Protocol, Unix on Finance domain. He use his blog to share his experience with technology to
+community. read more » If you want to write Guest post on this blog or If you have any question or request on Java or Technology than you can ask me
+on gtalk or email me at savingfunda@gmail.com and on Google Plus Javin Paul
+#
+
+  * About Me
+  * Privacy Policy
+
+#
+
