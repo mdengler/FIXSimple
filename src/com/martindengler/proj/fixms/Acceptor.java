@@ -14,12 +14,12 @@ public class Acceptor {
     }
 
     public void run() {
-        Iterator<Map> stream = FIXStream.accept().iterator();
+        Iterator<FIXMessage> stream = FIXStream.accept().iterator();
         while (stream.hasNext())
             processMessage(stream.next());
     }
 
-    public void processMessage(Map message) {
+    public void processMessage(FIXMessage message) {
         System.out.printf("processMessage(): %s%n", message);
     }
 

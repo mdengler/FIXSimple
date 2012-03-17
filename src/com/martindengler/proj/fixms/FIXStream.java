@@ -10,19 +10,12 @@ import com.martindengler.proj.fixms.spec.Tag;
 
 public class FIXStream {
 
-    public static Collection<Map> accept() {
-        Collection<Map> stream = new ArrayList<Map>();
-        stream.add(newMessage("Logon"));
-        stream.add(newMessage("NewOrderSingle"));
-        stream.add(newMessage("Logoff"));
+    public static Collection<FIXMessage> accept() {
+        Collection<FIXMessage> stream = new ArrayList<FIXMessage>();
+        stream.add(FIXMessage.factory("Logon"));
+        stream.add(FIXMessage.factory("NewOrderSingle"));
+        stream.add(FIXMessage.factory("Logoff"));
         return stream;
-    }
-
-    protected static Map newMessage(String messageType) {
-        Map<Tag, String> message = new HashMap<Tag, String>();
-        message.put(Tag.BEGINSTRING, "FIXT.1.1");
-        message.put(Tag.BODYLENGTH, "42");
-        return message;
     }
 
 }
