@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.EnumSet;
 
+
 public enum Tag {
     // Header tags
         BEGINSTRING(8),
