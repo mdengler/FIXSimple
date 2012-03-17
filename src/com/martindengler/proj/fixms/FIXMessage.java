@@ -87,8 +87,14 @@ public class FIXMessage extends TreeMap<Tag, String> {
         return sb.toString();
     }
 
+
     public String toWire() {
         return this.toString(SOH, false);
+    }
+
+
+    public String fromWire() {
+        throw new RuntimeException("Not implemented");
     }
 
 
