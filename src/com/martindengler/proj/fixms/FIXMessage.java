@@ -1,6 +1,7 @@
 package com.martindengler.proj.fixms;
 
 import java.nio.charset.Charset;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.TreeMap;
 
 import com.martindengler.proj.fixms.spec.MsgType;
 import com.martindengler.proj.fixms.spec.Tag;
+
 
 public class FIXMessage extends TreeMap<Tag, String> {
 
@@ -21,10 +23,20 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     private FIXMessage() {};  //immutable; TODO: actually do this properly
 
-    public static FIXMessage factory(String messageType) {
+    public static FIXMessage factory(String messageType, Integer sequenceNumber) {
+        return factory(MsgType.valueOf(messageType), sequenceNumber);
+    }
+
+    public static FIXMessage factory(MsgType messageType, Integer sequenceNumber) {
         FIXMessage message = new FIXMessage()
-            .putM(Tag.BEGINSTRING, "FIXT.1.1")
-            .putM(Tag.BODYLENGTH, "42");
+            .putM(Tag.BEGINSTRING,     "FIX.4.2")
+            //    Tag.BODYLENGTH       calculated later
+            .putM(Tag.MSGTYPE,         messageType.getCode().toString())
+            //    Tag.SENDERCOMPID     set later
+            //    Tag.TARGETCOMPID     set later
+            .putM(Tag.MSGSEQNUM,       sequenceNumber)
+            //    Tag.SENDINGTIME      calculated later
+            ;
         return message;
     }
 
@@ -32,9 +44,28 @@ public class FIXMessage extends TreeMap<Tag, String> {
         FIXMessage changed = new FIXMessage();
         changed.putAll(this);
         changed.put(key, value);
+        changed.put(Tag.BODYLENGTH, String.format("%d", calculateFIXBodyLength()));
         changed.put(Tag.CHECKSUM, String.format("%03d", calculateFIXChecksum()));
         return changed;
     }
+
+    public FIXMessage putM(Tag key, Integer value) {
+        return putM(key, String.format("%d", value)); //TODO: ensure signed
+    }
+
+    public FIXMessage putM(Tag key, float value) {
+        return putM(key, String.format("%15f", value)); //TODO: ensure 15 sig figs
+    }
+
+    public FIXMessage putM(Tag key, Boolean value) {
+        return putM(key, value ? "Y" : "N");
+    }
+
+    public FIXMessage putM(Tag key, Calendar value) {
+        return putM(key, String.format("%Y%m%d-%H:%M:%S", value));
+    }
+
+
 
     @Override
     public String toString() {
@@ -60,7 +91,19 @@ public class FIXMessage extends TreeMap<Tag, String> {
         return this.toString(SOH, false);
     }
 
-    public int calculateFIXChecksum() {
+
+    protected byte[] getWireBytes() {
+        String wireMessageString = this.toWire();
+        return wireMessageString.getBytes(ISO_8859_1);
+    }
+
+
+    protected Integer calculateFIXBodyLength() {
+        return getWireBytes().length;
+    }
+
+
+    protected int calculateFIXChecksum() {
         String wireMessageString = this.toWire();
         byte[] wireMessageBytes = wireMessageString.getBytes(ISO_8859_1);
         int checksum = 0;
