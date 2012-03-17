@@ -6,7 +6,7 @@ import java.util.EnumSet;
 
 public enum Tag {
     // Header tags
-    BEGINSTRING(8),
+        BEGINSTRING(8),
         BODYLENGTH(9),
         MSGTYPE(35, "Always unencrypted, must be third field in message"),
         APPLVERID(1128, "Indicates application version using a service pack identifier. The ApplVerID applies to a specific message occurrence."),
@@ -56,6 +56,10 @@ public enum Tag {
     private Integer code;
     private String note;
 
+    public static Tag fromCode(Integer code) {
+        return lookup.get(code);
+    }
+
     private Tag() {
         this(-1, "unknown tag note");
     }
@@ -69,12 +73,19 @@ public enum Tag {
         this.note = note;
     }
 
-    public static Tag fromCode(Integer code) {
-        return lookup.get(code);
-    }
-
     public Integer getCode() {
         return this.code;
+    }
+
+    public String toString() {
+        return this.code.toString();
+    }
+
+    public String toString(Boolean verbose) {
+        if (verbose)
+            return this.toString() + "_" + this.name();
+        else
+            return this.toString();
     }
 
 }
