@@ -1,12 +1,12 @@
-package com.martindengler.proj.fixms;
+package com.martindengler.proj.FIXSimple;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import com.martindengler.proj.fixms.spec.MsgType;
-import com.martindengler.proj.fixms.spec.Tag;
+import com.martindengler.proj.FIXSimple.spec.MsgType;
+import com.martindengler.proj.FIXSimple.spec.Tag;
 
 public class Acceptor {
 

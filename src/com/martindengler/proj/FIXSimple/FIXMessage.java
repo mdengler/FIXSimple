@@ -1,4 +1,4 @@
-package com.martindengler.proj.fixms;
+package com.martindengler.proj.FIXSimple;
 
 import java.nio.charset.Charset;
 import java.util.Calendar;
@@ -7,9 +7,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Arrays;
+import java.util.ArrayList;
 
-import com.martindengler.proj.fixms.spec.MsgType;
-import com.martindengler.proj.fixms.spec.Tag;
+import com.martindengler.proj.FIXSimple.spec.MsgType;
+import com.martindengler.proj.FIXSimple.spec.Tag;
 
 
 public class FIXMessage extends TreeMap<Tag, String> {
@@ -17,7 +19,8 @@ public class FIXMessage extends TreeMap<Tag, String> {
     private static final long serialVersionUID = 16180339887L;
     private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
-    public static String SOH = String.format("%c", 0x01); //FUTURE: make enum?
+    public static byte SOH_byte = 0x01;
+    public static String SOH = String.format("%c", SOH_byte); //FUTURE: make enum?
 
     private int checksum = 0;
 
@@ -39,6 +42,71 @@ public class FIXMessage extends TreeMap<Tag, String> {
             ;
         return message;
     }
+
+
+    public static Integer validate(FIXMessage message) {
+        return 0;
+    }
+
+
+    public static FIXMessage factory(String wireBytesAsString) {
+        return factory(wireBytesAsString.getBytes(ISO_8859_1));
+    }
+
+    /**
+     * Parses the message from a string using a custom delimiter
+     */
+    public static FIXMessage factory(String wireBytesAsString, String delimiter) {
+
+        FIXMessage message = new FIXMessage();
+
+        // 1) split into Tag, Data pairs
+        // 2) add pairs to message
+        // 3) call validate() (might throw)
+        // 4) return message
+
+        for (String rawPair : wireBytesAsString.split(delimiter)) {
+            String[] pair = rawPair.split("=");
+            if (pair.length != 2)
+                throw new RuntimeException(String.format("FIXMessage.factory():" +
+                                " bad pair %s in message %s",
+                                rawPair, wireBytesAsString));
+            Tag tag = Tag.fromCode(Integer.parseInt(pair[0]));
+            String data = pair[1];
+
+            System.out.println(String.format("read tag %s with data %s from rawstring %s", tag, data, wireBytesAsString));
+
+            message = message.putM(tag, data);
+        }
+
+        return message;
+
+    }
+
+
+    /**
+     * Parses the message from a bunch of bytes on the wire.
+     *
+     * DOES NOT VALIDATE the message.  Call
+     * FIXMessage.validate(message) if you want that.
+     *
+     * CAN THROW.  Will throw an exception if bytes contain tags not
+     * part of the FIX specification.  Behaviour is undefined if there
+     * are not SOH-delimited strings of equals-delimited key/value
+     * pairs.
+     *
+     */
+    public static FIXMessage factory(byte[] wireBytes) {
+        return factory(wireBytes, SOH_byte);
+    }
+
+
+    public static FIXMessage factory(byte[] wireBytes, byte delimiter) {
+        return factory(new String(wireBytes, ISO_8859_1),
+                       new String(new byte[] {delimiter}));
+    }
+
+
 
     public FIXMessage putM(Tag key, String value) {
         FIXMessage changed = new FIXMessage();
@@ -90,11 +158,6 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     public String toWire() {
         return this.toString(SOH, false);
-    }
-
-
-    public String fromWire() {
-        throw new RuntimeException("Not implemented");
     }
 
 

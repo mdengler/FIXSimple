@@ -1,4 +1,4 @@
-package com.martindengler.proj.fixms.spec;
+package com.martindengler.proj.FIXSimple.spec;
 
 import java.util.Map;
 import java.util.HashMap;

@@ -1,12 +1,12 @@
-package com.martindengler.proj.fixms;
+package com.martindengler.proj.FIXSimple;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.martindengler.proj.fixms.spec.MsgType;
-import com.martindengler.proj.fixms.spec.Tag;
+import com.martindengler.proj.FIXSimple.spec.MsgType;
+import com.martindengler.proj.FIXSimple.spec.Tag;
 
 public class FIXStream {
 
