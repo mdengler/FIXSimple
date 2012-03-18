@@ -77,6 +77,7 @@ Key classes
 
 
 TODO: add all parts of all messages sent / received that are NOT supported
+TODO: document type-safety of message getters & setters
 TOOD: document enum creation process
 TODO: document any obvious inefficiences
 TODO: document profiling
