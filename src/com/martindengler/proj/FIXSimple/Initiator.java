@@ -47,7 +47,7 @@ public class Initiator {
         if (response.getMsgType() != MsgType.EXECUTION_REPORT)
             throw new IllegalStateException("didn't get EXECUTION_REPORT response; got " + response.toString());
 
-        FIXMessagePrinter.prettyPrint(message);
+        FIXMessagePrinter.prettyPrint(response);
 
         message = FIXMessage.factory(MsgType.LOGOUT);
         server.deliver(message);
