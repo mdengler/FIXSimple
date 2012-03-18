@@ -14,6 +14,7 @@ import com.martindengler.proj.FIXSimple.spec.MsgType;
 import com.martindengler.proj.FIXSimple.spec.Tag;
 
 
+//TODO: put in spec/ as FIXMessage42?
 public class FIXMessage extends TreeMap<Tag, String> {
 
     private static final long serialVersionUID = 16180339887L;
@@ -21,6 +22,10 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     public static byte SOH_byte = 0x01;
     public static String SOH = String.format("%c", SOH_byte); //FUTURE: make enum?
+
+    public static String FIX_PREAMBLE = "8=FIX.4.2" + SOH + "9=";
+
+
 
     private int checksum = 0;
 
@@ -67,14 +72,14 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
         for (String rawPair : wireBytesAsString.split(delimiter)) {
             String[] pair = rawPair.split("=");
+
             if (pair.length != 2)
                 throw new RuntimeException(String.format("FIXMessage.factory():" +
                                 " bad pair %s in message %s",
                                 rawPair, wireBytesAsString));
+
             Tag tag = Tag.fromCode(Integer.parseInt(pair[0]));
             String data = pair[1];
-
-            System.out.println(String.format("read tag %s with data %s from rawstring %s", tag, data, wireBytesAsString));
 
             message = message.putM(tag, data);
         }
@@ -117,20 +122,32 @@ public class FIXMessage extends TreeMap<Tag, String> {
         return changed;
     }
 
+
     public FIXMessage putM(Tag key, Integer value) {
         return putM(key, String.format("%d", value)); //TODO: ensure signed
     }
+
 
     public FIXMessage putM(Tag key, float value) {
         return putM(key, String.format("%15f", value)); //TODO: ensure 15 sig figs
     }
 
+
     public FIXMessage putM(Tag key, Boolean value) {
         return putM(key, value ? "Y" : "N");
     }
 
+
     public FIXMessage putM(Tag key, Calendar value) {
-        return putM(key, String.format("%Y%m%d-%H:%M:%S", value));
+        return putM(key, String.format("%1$tY%1$tm%1$td-%1$tH:%1$tM:%1$tS", value));
+    }
+
+
+    public MsgType getMsgType() {
+        for (Map.Entry<Tag, String> pair : this.entrySet())
+            if (pair.getKey() == Tag.MSGTYPE)
+                return MsgType.fromCode(pair.getValue());
+        throw new IllegalStateException("FIXMessage: no Tag.MSGTYPE tag present");
     }
 
 
