@@ -30,10 +30,21 @@ import static com.martindengler.proj.FIXSimple.FIXMessage.SOH_byte;
 
 public class FIXStream {
 
+    public enum FIXStreamState {
+        UNINITIALIZED,
+            UNOPENED,
+            ACTIVE,
+            CLOSED_IN,
+            CLOSED_OUT,
+            CLOSED_ALL,
+            UNKNOWN
+            }
+
     private BlockingQueue<FIXMessage> incomingQueue;
     private BlockingQueue<FIXMessage> outgoingQueue;
 
     private Executor executor;
+    private FIXStreamState state = FIXStreamState.UNINITIALIZED;
 
     public static FIXStream connect(Socket conversation) throws IOException {
         return new FIXStream(new InputStreamReader(conversation.getInputStream()),
@@ -58,6 +69,9 @@ public class FIXStream {
                                                100,   // keepAliveTime in...
                                                TimeUnit.SECONDS,
                                                new ArrayBlockingQueue<Runnable>(10));
+
+        this.state = FIXStreamState.UNOPENED;
+
     }
 
 
@@ -74,6 +88,7 @@ public class FIXStream {
     private FIXStream(final Reader inputReader, final Writer outputWriter) {
         this();
 
+        // TODO: separate somehow
         Runnable inputHandler = new Runnable() {
                 public void run() {
                     FIXMessage readMessage;
@@ -85,18 +100,45 @@ public class FIXStream {
                             System.err.println("FIXStream.inputHandler.run: readOneMessage threw IOException; stopping.");
                             System.err.println(ioe.getMessage());
                             System.err.println(ioe.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = FIXStreamState.CLOSED_IN;
+                                break;
+                            case CLOSED_OUT:
+                                state = FIXStreamState.CLOSED_ALL;
+                                break;
+                            }
                         } catch (RuntimeException e) {
                             System.err.println("FIXStream.inputHandler.run: readOneMessage threw IOException; stopping.");
                             System.err.println(e.getMessage());
                             System.err.println(e.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = FIXStreamState.CLOSED_IN;
+                                break;
+                            case CLOSED_OUT:
+                                state = FIXStreamState.CLOSED_ALL;
+                                break;
+                            }
                             throw e;
                         }
-                        if (readMessage == null)
-                            break;
-                        System.err.format("FIXStream.inputHandler.run: got message from readOneMessage%n");
-                        System.err.println(readMessage.toString());
-                        incomingQueue.add(readMessage);
-                        System.err.println("..added to incomingQueue");
+                        if (readMessage == null) {
+                            System.err.println("FIXStream.inputHandler.run: stream is closed for messages");
+                            switch (state) {
+                            case ACTIVE:
+                                state = FIXStreamState.CLOSED_IN;
+                                break;
+                            case CLOSED_OUT:
+                                state = FIXStreamState.CLOSED_ALL;
+                                break;
+                            }
+                            return;
+                        } else {
+                            System.err.format("FIXStream.inputHandler.run: got message from readOneMessage%n");
+                            System.err.println(readMessage.toString());
+                            incomingQueue.add(readMessage);
+                            System.err.println("..added to incomingQueue");
+                        }
                     }
                 }
             };
@@ -114,21 +156,42 @@ public class FIXStream {
                             System.err.println("FIXStream.outputHandler.run(): InterruptedException in outgoingQueue.take(); will retry");
                             System.err.println(inte.getMessage());
                             System.err.println(inte.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = FIXStreamState.CLOSED_OUT;
+                                break;
+                            case CLOSED_IN:
+                                state = FIXStreamState.CLOSED_ALL;
+                                break;
+                            }
                         } catch (IOException ioe) {
                             System.err.println("FIXStream.outputHandler.run(): IOException in outputWriter.write(); stopping");
                             System.err.println(ioe.getMessage());
                             System.err.println(ioe.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = FIXStreamState.CLOSED_OUT;
+                                break;
+                            case CLOSED_IN:
+                                state = FIXStreamState.CLOSED_ALL;
+                                break;
+                            }
                             break;
                         }
                     }
                 }
             };
 
+        this.state = FIXStreamState.ACTIVE;
+
         this.executor.execute(inputHandler);
         this.executor.execute(outputHandler);
     }
 
 
+    /**
+     * returns null if there are no more messages to read
+     */
     private FIXMessage readOneMessage(Reader inputReader) throws IOException {
         //tl;dr: this method is long, and very ugly
         //
@@ -151,7 +214,7 @@ public class FIXStream {
         byte[] buffer = new byte[bufferLength];
         Arrays.fill(buffer, SOH_byte);  // TODO: document / consider repercussions of this guard value
 
-        int lastReadCharacter;
+        int lastReadCharacter = -1;
         int countReadCharacters = 0;
 
         // inefficient but simpler
@@ -163,6 +226,12 @@ public class FIXStream {
 
             preambleBuffer[countReadCharacters] = (byte) lastReadCharacter;
             buffer[countReadCharacters++] = (byte) lastReadCharacter;
+        }
+
+        if ((lastReadCharacter == -1)
+                &&
+                countReadCharacters == 0) {
+            return null;
         }
 
         if (!Arrays.equals(FIX_PREAMBLE, preambleBuffer)) {
