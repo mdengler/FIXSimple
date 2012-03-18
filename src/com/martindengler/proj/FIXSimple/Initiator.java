@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import com.martindengler.proj.FIXSimple.spec.MsgType;
+import com.martindengler.proj.FIXSimple.spec.OrdStatus;
 import com.martindengler.proj.FIXSimple.spec.Tag;
 
 public class Initiator {
@@ -26,7 +27,7 @@ public class Initiator {
             System.err.println("Couldn't connect; exiting.");
             System.exit(1);
         }
-        System.out.println("Connected.");
+        System.out.println("Challenge accepted.");
 
 
         message = FIXMessage.factory(MsgType.LOGON);
@@ -36,12 +37,15 @@ public class Initiator {
         if (response.getMsgType() != MsgType.LOGON)
             throw new IllegalStateException("didn't get LOGON response; got " + response.toString());
 
-        message = FIXMessage.factory(MsgType.NEW_ORDER_SINGLE);
+        message = FIXMessage.factory(MsgType.NEW_ORDER_SINGLE)
+            .putM(Tag.ORDSTATUS, OrdStatus.NEW)
+            .putM(Tag.ORDERQTY,  "10000")
+            ;
         server.deliver(message);
 
         response = server.receive();
-        if (response.getMsgType() != MsgType.NEW_ORDER_SINGLE)
-            throw new IllegalStateException("didn't get NEW_ORDER_SINGLE response; got " + response.toString());
+        if (response.getMsgType() != MsgType.EXECUTION_REPORT)
+            throw new IllegalStateException("didn't get EXECUTION_REPORT response; got " + response.toString());
 
         message = FIXMessage.factory(MsgType.LOGOUT);
         server.deliver(message);
@@ -50,6 +54,7 @@ public class Initiator {
         if (response.getMsgType() != MsgType.LOGOUT)
             throw new IllegalStateException("didn't get LOGOUT response; got " + response.toString());
 
+        System.out.println("Challenge completed.");
         System.exit(0);
 
     }
