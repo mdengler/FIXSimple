@@ -60,4 +60,5 @@ TODO: initiator doesn't exit when connection dropped
 TODO: ensure use of int vs Integer is sensible and consistent
 TODO: ensure System.err.println/format calls are removed where appropriate
 TODO: sanity check design vs. quickfix/j
-
+TODO: check 80 char line lengths
+TODO: write tests
