@@ -37,7 +37,10 @@ public class Acceptor {
             // TODO: break out into another thread
             // TODO: make into better state machine
             String state = "pendinglogin";
+            String targetCompId = "unknown";
+
             while (true) {  // state machine start
+
                 if (state == "pendinglogin") {
                     FIXMessage incomingMessage = input.take();
                     if (incomingMessage.getMsgType() != MsgType.LOGON) {
@@ -47,23 +50,36 @@ public class Acceptor {
                         clientSocket.close(); // TODO: improve
                         break;
                     }
+                    targetCompId = incomingMessage.get(Tag.SENDERCOMPID);
                     FIXMessage responseMessage = FIXMessage
                         .factory(MsgType.LOGON)
                         .putM(Tag.SENDERCOMPID, mySenderCompId)
-                        .putM(Tag.TARGETCOMPID, incomingMessage.get(Tag.SENDERCOMPID))
+                        .putM(Tag.TARGETCOMPID, targetCompId)
                         ;
                     state = "normal";
                     output.put(responseMessage);
                 }
+
+
                 if (state == "normal") {
                     FIXMessage incomingMessage = input.take();
+                    if (incomingMessage.getMsgType() == MsgType.LOGOUT) {
+                        FIXMessage logoutMessage = FIXMessage.factory(MsgType.LOGOUT)
+                            .putM(Tag.SENDERCOMPID, mySenderCompId)
+                            .putM(Tag.TARGETCOMPID, targetCompId)
+                            ;
+                        state = "loggedout";
+                        output.put(logoutMessage);
+                        System.err.println("logged " + targetCompId + " out.");
+                        break;
+                    }
                     if (incomingMessage.getMsgType() != MsgType.NEW_ORDER_SINGLE) {
                         System.err.println("Ignoring non-NOS message");
                         break;
                     }
                     System.err.println("Got NOS");
                     // TODO: handle properly
-                    if (OrdStatus.valueOf(incomingMessage.get(Tag.ORDSTATUS))
+                    if (OrdStatus.fromCode(incomingMessage.get(Tag.ORDSTATUS))
                         != OrdStatus.NEW) {
                         System.err.println("Ignoring NOS with ORDSTATUS != NEW");
                         break;
