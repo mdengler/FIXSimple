@@ -22,12 +22,12 @@ public class Initiator {
         FIXMessage message;
         FIXMessage response;
 
-        System.out.println("Connecting...");
+        System.err.println("Connecting...");
         if (!server.connect("localhost", 16180)) {
             System.err.println("Couldn't connect; exiting.");
             System.exit(1);
         }
-        System.out.println("Challenge accepted.");
+        System.err.println("Challenge accepted.");
 
 
         message = FIXMessage.factory(MsgType.LOGON);
@@ -47,6 +47,8 @@ public class Initiator {
         if (response.getMsgType() != MsgType.EXECUTION_REPORT)
             throw new IllegalStateException("didn't get EXECUTION_REPORT response; got " + response.toString());
 
+        FIXMessagePrinter.prettyPrint(message);
+
         message = FIXMessage.factory(MsgType.LOGOUT);
         server.deliver(message);
 
@@ -54,17 +56,11 @@ public class Initiator {
         if (response.getMsgType() != MsgType.LOGOUT)
             throw new IllegalStateException("didn't get LOGOUT response; got " + response.toString());
 
-        System.out.println("Challenge completed.");
+        System.err.println("Challenge completed.");
         System.exit(0);
 
     }
 
-
-    public FIXMessage processMessage(FIXMessage message) {
-        System.out.printf("processMessage(): %s%n", message);
-        //TODO: fill in
-        return null;
-    }
 
     public static void main(String[] args) throws IOException {
         Initiator client = new Initiator();
