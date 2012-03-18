@@ -53,3 +53,11 @@ TODO: document profiling
 TODO: consider problems in http://www.odi.ch/prog/design/newbies.php#10
 TODO: consider problems in http://zguide.zeromq.org/page:all#Why-We-Needed-MQ
 TODO: ensure getters are consistently named; getFoo() or foo()
+
+
+
+TODO: initiator doesn't exit when connection dropped
+TODO: ensure use of int vs Integer is sensible and consistent
+TODO: ensure System.err.println/format calls are removed where appropriate
+TODO: sanity check design vs. quickfix/j
+
