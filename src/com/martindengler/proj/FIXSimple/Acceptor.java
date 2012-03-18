@@ -36,13 +36,6 @@ public class Acceptor {
         }
     }
 
-
-    public FIXMessage processMessage(FIXMessage message) {
-        System.out.printf("processMessage(): %s%n", message);
-        //TODO: fill in
-        return null;
-    }
-
     public static void main(String[] args) throws IOException, InterruptedException {
         Acceptor server = new Acceptor();
         server.run();
