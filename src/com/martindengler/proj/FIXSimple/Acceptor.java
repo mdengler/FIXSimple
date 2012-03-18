@@ -7,7 +7,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.martindengler.proj.FIXSimple.spec.MsgType;
 import com.martindengler.proj.FIXSimple.spec.Tag;
@@ -15,7 +19,14 @@ import com.martindengler.proj.FIXSimple.spec.OrdStatus;
 
 public class Acceptor {
 
+    private Executor executor;
+
     public Acceptor() {
+        this.executor = new ThreadPoolExecutor(5,     // corePoolSize
+                                               1000,  // maximumPoolSize
+                                               100,   // keepAliveTime in...
+                                               TimeUnit.SECONDS,
+                                               new ArrayBlockingQueue<Runnable>(10));
     }
 
     public void run() throws IOException, InterruptedException {
@@ -27,82 +38,10 @@ public class Acceptor {
         while (true) {  // client handling start
             System.err.println("Listening on port " + listenPort);
             Socket clientSocket = listenSocket.accept();
-            FIXStream bidirectionalStream = FIXStream.connect(clientSocket);
-
-            System.err.println("got connection");
-
-            BlockingQueue<FIXMessage> input  = bidirectionalStream. inputStream();
-            BlockingQueue<FIXMessage> output = bidirectionalStream.outputStream();
-
-            // TODO: break out into another thread
-            // TODO: make into better state machine
-            String state = "pendinglogin";
-            String targetCompId = "unknown";
-
-            while (true) {  // state machine start
-
-                if (state == "pendinglogin") {
-                    FIXMessage incomingMessage = input.take();
-                    if (incomingMessage.getMsgType() != MsgType.LOGON) {
-                        System.err.format("waiting for LOGON message" +
-                                          " but got %s instead%s",
-                                          incomingMessage);
-                        clientSocket.close(); // TODO: improve
-                        break;
-                    }
-                    targetCompId = incomingMessage.get(Tag.SENDERCOMPID);
-                    FIXMessage responseMessage = FIXMessage
-                        .factory(MsgType.LOGON)
-                        .putM(Tag.SENDERCOMPID, mySenderCompId)
-                        .putM(Tag.TARGETCOMPID, targetCompId)
-                        ;
-                    state = "normal";
-                    output.put(responseMessage);
-                }
-
-
-                if (state == "normal") {
-                    FIXMessage incomingMessage = input.take();
-                    if (incomingMessage.getMsgType() == MsgType.LOGOUT) {
-                        FIXMessage logoutMessage = FIXMessage.factory(MsgType.LOGOUT)
-                            .putM(Tag.SENDERCOMPID, mySenderCompId)
-                            .putM(Tag.TARGETCOMPID, targetCompId)
-                            ;
-                        state = "loggedout";
-                        output.put(logoutMessage);
-                        System.err.println("logged " + targetCompId + " out.");
-                        break;
-                    }
-                    if (incomingMessage.getMsgType() != MsgType.NEW_ORDER_SINGLE) {
-                        System.err.println("Ignoring non-NOS message");
-                        break;
-                    }
-                    System.err.println("Got NOS");
-                    // TODO: handle properly
-                    if (OrdStatus.fromCode(incomingMessage.get(Tag.ORDSTATUS))
-                        != OrdStatus.NEW) {
-                        System.err.println("Ignoring NOS with ORDSTATUS != NEW");
-                        break;
-                    }
-                    FIXMessage responseMessage = FIXMessage
-                        .factory(MsgType.EXECUTION_REPORT)
-                        .putM(Tag.SENDERCOMPID, mySenderCompId)
-                        .putM(Tag.TARGETCOMPID, incomingMessage.get(Tag.SENDERCOMPID))
-                        .putM(Tag.LEAVESQTY,    incomingMessage.get(Tag.ORDERQTY))
-                        ;
-                    for (Tag t : Arrays.asList(Tag.CLORDID,
-                                               Tag.ORIGCLORDID,
-                                               Tag.ORDERQTY,
-                                               Tag.CUMQTY,
-                                               Tag.LASTSHARES)) {
-                        responseMessage.putM(t, incomingMessage.get(t));
-                    }
-                    output.put(responseMessage);
-                }
-            }
-
-            System.err.println("finished handling connection");
-
+            AcceptorSimpleClientHandler handler =
+                new AcceptorSimpleClientHandler(mySenderCompId);
+            handler.connect(clientSocket);
+            this.executor.execute(handler);
         }
     }
 

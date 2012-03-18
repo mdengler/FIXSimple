@@ -198,12 +198,12 @@ public class FIXStream {
     }
 
 
-    public BlockingQueue<FIXMessage> inputStream() {
+    public BlockingQueue<FIXMessage> inputQueue() {
         return this.incomingQueue;
     }
 
 
-    public BlockingQueue<FIXMessage> outputStream() {  //TODO: rename outputQueue?
+    public BlockingQueue<FIXMessage> outputQueue() {  //TODO: rename outputQueue?
         return this.outgoingQueue;
     }
 

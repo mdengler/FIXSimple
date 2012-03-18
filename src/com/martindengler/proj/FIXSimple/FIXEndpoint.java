@@ -16,64 +16,41 @@ import com.martindengler.proj.FIXSimple.spec.Tag;
  * Convenience class for Initiators
  */
 
-public class FIXEndpoint {
+public abstract class FIXEndpoint {
 
-    private String senderCompId;
-    private String targetCompId;
+    protected String senderCompId;
+    protected String targetCompId;
 
-    private FIXStream bidirectionalStream;
-    private BlockingQueue<FIXMessage> outgoingMessageQueue;
-    private BlockingQueue<FIXMessage> incomingMessageQueue;
-    private Iterator<FIXMessage> incomingMessageIterator;
+    protected Socket socket;
 
-    private Integer nextIncomingSequenceNumber = -1;
-    private Integer nextOutgoingSequenceNumber = -1;
+    protected FIXStream bidirectionalStream;
+    protected BlockingQueue<FIXMessage> outgoingMessageQueue;
+    protected BlockingQueue<FIXMessage> incomingMessageQueue;
+    protected Iterator<FIXMessage> incomingMessageIterator;
 
-    private Boolean connected = false; //TODO: make thread-safe
+    protected Integer nextIncomingSequenceNumber = -1;
+    protected Integer nextOutgoingSequenceNumber = -1;
+
+    protected Boolean connected = false; //TODO: make thread-safe
 
 
-    private FIXEndpoint() {
+    protected FIXEndpoint() {
     }
 
 
-    public FIXEndpoint(String senderCompId, String targetCompId) {
+    protected FIXEndpoint(String senderCompId, String targetCompId) {
         this.senderCompId = senderCompId;
         this.targetCompId = targetCompId;
     }
 
 
-    public Boolean connect(String hostname, int port) {
-        return this.connect(hostname, port, 10);
-    }
-
-
-    public Boolean connect(String hostname, int port, int timeout) {
-        InetSocketAddress endpointAddress = new InetSocketAddress(hostname, port);
-        try {
-            Socket endpoint = new Socket();
-            endpoint.connect(endpointAddress, timeout);
-
-            return this.connect(endpoint);
-
-        } catch (IOException ioe) {
-            System.err.println(String.format("FIXEndpoint.connect(...): couldn't connect to %s:%s (timeout: %s)",
-                            hostname, port, timeout));
-            System.err.println(ioe.getMessage());
-            System.err.println(ioe.toString());
-
-            this.connected = false;
-
-            return false;
-        }
-    }
-
-
     public Boolean connect(Socket s) {
+        this.socket = s;
         try {
             this.bidirectionalStream = FIXStream.connect(s);
 
-            this.incomingMessageQueue = this.bidirectionalStream.inputStream();
-            this.outgoingMessageQueue = this.bidirectionalStream.outputStream();
+            this.incomingMessageQueue = this.bidirectionalStream.inputQueue();
+            this.outgoingMessageQueue = this.bidirectionalStream.outputQueue();
 
             this.incomingMessageIterator = this.incomingMessageQueue.iterator();
 

@@ -18,7 +18,7 @@ public class Initiator {
     }
 
     public void run() throws IOException {
-        FIXEndpoint server = new FIXEndpoint("MARTIN", "SERVER");
+        FIXEndpointConnector server = new FIXEndpointConnector("MARTIN", "SERVER");
         FIXMessage message;
         FIXMessage response;
 
