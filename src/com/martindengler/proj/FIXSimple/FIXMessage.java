@@ -9,14 +9,13 @@ import java.util.Set;
 import java.util.TreeMap;
 
 
-//TODO: put in spec/ as FIXMessage42?
 public class FIXMessage extends TreeMap<Tag, String> {
 
     private static final long serialVersionUID = 16180339887L;
 
     public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
     public static final byte SOH_byte = 0x01;
-    public static final String SOH = String.format("%c", SOH_byte); //FUTURE: make enum?
+    public static final String SOH = String.format("%b", SOH_byte); //FUTURE: make enum?
     public static final byte[] FIX_PREAMBLE = ("8=FIX.4.2" + SOH + "9=")
         .getBytes(ISO_8859_1);
 
@@ -45,8 +44,28 @@ public class FIXMessage extends TreeMap<Tag, String> {
     }
 
 
-    public static Integer validate(FIXMessage message) {
-        return 0; // TODO: implement
+    /**
+     * validates that the message conforms to the FIX spec.
+     *
+     * In particular, returns false unless:
+     * 1) BodyLength tag presence and contents are valid
+     * 2) CheckSum tag presence and contents are valid
+     * 3) MsgType tag presence and contents are valid
+     *
+     * Does NOT validate required tag presence and/or contents based on
+     * MsgType or business rules for tag contents.
+     */
+    public static boolean validate (FIXMessage message) {
+        if (!(message.containsKey(Tag.BODYLENGTH)
+                && message.containsKey(Tag.MSGTYPE)
+                && message.containsKey(Tag.CHECKSUM)))
+            return false;
+
+        Integer storedBodyLength = Integer.parseInt(message.get(Tag.BODYLENGTH));
+        Integer storedCheckSum = Integer.parseInt(message.get(Tag.CHECKSUM));
+
+        return (storedBodyLength == message.calculateFIXBodyLength())
+                && (storedCheckSum == message.calculateFIXChecksum());
     }
 
 
@@ -96,6 +115,7 @@ public class FIXMessage extends TreeMap<Tag, String> {
     public static FIXMessage fromWire(byte[] wireBytes) {
         FIXMessage message = factory(wireBytes, SOH_byte, false);
         message.wireBytes = wireBytes;
+        message.dontRecalcValues = true;
         return message;
     }
 
