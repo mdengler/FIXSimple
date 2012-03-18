@@ -50,3 +50,6 @@ TODO: add all parts of all messages sent / received that are NOT supported
 TOOD: document enum creation process
 TODO: document any obvious inefficiences
 TODO: document profiling
+TODO: consider problems in http://www.odi.ch/prog/design/newbies.php#10
+TODO: consider problems in http://zguide.zeromq.org/page:all#Why-We-Needed-MQ
+TODO: ensure getters are consistently named; getFoo() or foo()
