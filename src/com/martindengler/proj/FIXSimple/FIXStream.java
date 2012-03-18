@@ -61,6 +61,16 @@ public class FIXStream {
     }
 
 
+    public BlockingQueue<FIXMessage> inputStream() {
+        return this.incomingQueue;
+    }
+
+
+    public BlockingQueue<FIXMessage> outputStream() {  //TODO: rename outputQueue?
+        return this.outgoingQueue;
+    }
+
+
     private FIXStream(final Reader inputReader, final Writer outputWriter) {
         this();
 
@@ -153,11 +163,6 @@ public class FIXStream {
 
             preambleBuffer[countReadCharacters] = (byte) lastReadCharacter;
             buffer[countReadCharacters++] = (byte) lastReadCharacter;
-
-            System.err.format("readOneMessage() [PRE] read %c (total: %s)%n",
-                    lastReadCharacter,
-                    new String(buffer, 0, countReadCharacters)
-                    .replace(FIXMessage.SOH, "<SOH>"));
         }
 
         if (!Arrays.equals(FIX_PREAMBLE, preambleBuffer)) {
@@ -174,11 +179,6 @@ public class FIXStream {
                 lastReadCharacter != (int) SOH_byte) {
 
             buffer[countReadCharacters++] = (byte) lastReadCharacter;
-
-            System.err.format("readOneMessage() [LEN] read %c (total: %s)%n",
-                    lastReadCharacter,
-                    new String(buffer, 0, countReadCharacters)
-                    .replace(FIXMessage.SOH, "<SOH>"));
         }
 
         if (lastReadCharacter != (int) SOH_byte) {
@@ -234,11 +234,6 @@ public class FIXStream {
                 lastReadCharacter != (int) SOH_byte) {
 
             buffer[countReadCharacters++] = (byte) lastReadCharacter;
-
-            System.err.format("readOneMessage() [CHK] read %c (total: %s)%n",
-                    lastReadCharacter,
-                    new String(buffer, 0, countReadCharacters)
-                    .replace(FIXMessage.SOH, "<SOH>"));
         }
 
         if (lastReadCharacter != (int) SOH_byte) {
@@ -257,84 +252,8 @@ public class FIXStream {
 
         FIXMessage message = FIXMessage.fromWire(Arrays.
                 copyOfRange(buffer, 0, countReadCharacters));
-        System.err.format("readOneMessage() [END] read %s message%n", message);
         return message;
 
-    }
-
-
-    private FIXMessage readOneMessageOrig(Reader inputReader) throws IOException {
-        // TODO: revisit & refactor
-        // TODO: re-write to deal with bytes only, not strings and chars and bytes
-
-        System.err.println("readOneMessage() starting");
-
-        int c;
-        String lineSoFar = "";
-        while (!(lineSoFar.equals(FIX_PREAMBLE))
-               &&
-               (c = inputReader.read()) != -1) {
-            lineSoFar += (char) c;
-            System.err.format("readOneMessage() [PRE] read %s (total: %s)%n",
-                    c,
-                    lineSoFar.replace(FIXMessage.SOH, "<SOH>"));
-        }
-
-        if (!lineSoFar.equals(FIX_PREAMBLE)) {
-            String msg = String.format("problem reading FIX stream;" +
-                    "read %s but no FIX Preamble (%s) found.",
-                    lineSoFar,
-                    new String(FIX_PREAMBLE).replace(FIXMessage.SOH, "<SOH>"));
-            throw new IllegalStateException(msg);
-        }
-
-        String bodyLengthAsString = "";
-        while ((c = inputReader.read()) != -1 && (char) c != (char) SOH_byte) {
-            bodyLengthAsString += (char) c;
-            System.err.format("readOneMessage() [LEN] read %s (total: %s)%n",
-                    c,
-                    bodyLengthAsString.replace(FIXMessage.SOH, "<SOH>"));
-        }
-
-        lineSoFar += bodyLengthAsString;
-        lineSoFar += (char) SOH_byte;
-
-        Integer bodyLength = Integer.parseInt(bodyLengthAsString);
-        Integer restOfMessageLength = bodyLength - FIX_PREAMBLE.length;
-        char[] restOfMessage = new char[restOfMessageLength];
-        Integer charsRead = inputReader.read(restOfMessage,
-                0,
-                restOfMessageLength);
-
-        if (charsRead != restOfMessageLength) {
-            String msg = String.format("problem reading FIX stream;" +
-                    " was supposed to read %s chars" +
-                    " (per fix message prefix %s)" +
-                    " but actually read %s chars)",
-                    restOfMessageLength,
-                    lineSoFar.replace(FIXMessage.SOH, "<SOH>"),
-                    charsRead);
-            throw new IllegalStateException(msg);
-        }
-
-        lineSoFar += String.valueOf(restOfMessage);
-        System.err.format("readOneMessage() [RST] read %s (total: %s)%n",
-                String.valueOf(restOfMessage).replace(FIXMessage.SOH, "<SOH>"),
-                lineSoFar.replace(FIXMessage.SOH, "<SOH>"));
-
-        FIXMessage message = FIXMessage.fromWire((lineSoFar
-                        + restOfMessage).getBytes(ISO_8859_1));
-        System.err.format("readOneMessage() [END] read %s message%n", message);
-        return message;
-    }
-
-
-    public BlockingQueue<FIXMessage> inputStream() {
-        return this.incomingQueue;
-    }
-
-    public BlockingQueue<FIXMessage> outputStream() {  //TODO: rename outputQueue?
-        return this.outgoingQueue;
     }
 
 }
