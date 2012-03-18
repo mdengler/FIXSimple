@@ -6,10 +6,27 @@ import java.util.EnumSet;
 
 
 public enum Tag {
+
+    // NOTE -- Header and Trailer enums should be first and last,
+    // respectively, so their "natural" order (Java enum terminology)
+    // matches the wire order, so FIXMessage.toWire() operates
+    // correctly.  Don't change the order of these enum declarations
+    // unless you want to re-implement FIXMessage.toWire() to maintain
+    // correctness.
+    //
     // Header tags
         BEGINSTRING(8),
         BODYLENGTH(9),
         MSGTYPE(35, "Always unencrypted, must be third field in message"),
+    // NOTE -- Header and Trailer enums should be first and last,
+    // respectively, so their "natural" order (Java enum terminology)
+    // matches the wire order, so FIXMessage.toWire() operates
+    // correctly.  Don't change the order of these enum declarations
+    // unless you want to re-implement FIXMessage.toWire() to maintain
+    // correctness.
+
+
+
         APPLVERID(1128, "Indicates application version using a service pack identifier. The ApplVerID applies to a specific message occurrence."),
         APPLEXTID(1156, "See FIXT 1.1 spec"),
         CSTMAPPLVERID(1129, "Used to support bilaterally agreed custom functionality"),
@@ -37,10 +54,22 @@ public enum Tag {
         MESSAGEENCODING(347, "Type of message encoding (non-ASCII characters) used in a message's \"Encoded\" fields. Required if any \"Encoding\" fields are used."),
         LASTMSGSEQNUMPROCESSED(369, "The last MsgSeqNum value received by the FIX engine and processed by downstream application, such as trading system or order routing system. Can be specified on every message sent. Useful for detecting a backlog with a counterparty."),
 
+    // NOTE -- Header and Trailer enums should be first and last,
+    // respectively, so their "natural" order (Java enum terminology)
+    // matches the wire order, so FIXMessage.toWire() operates
+    // correctly.  Don't change the order of these enum declarations
+    // unless you want to re-implement FIXMessage.toWire() to maintain
+    // correctness.
         // Trailer tags
         SIGNATURELENGTH(93, "Required when trailer contains signature. Note: Not to be included within SecureData field"),
         SIGNATURE(89, "Note: Not to be included within SecureData field"),
         CHECKSUM(10, "Always unencrypted, always last field in message"),
+    // NOTE -- Header and Trailer enums should be first and last,
+    // respectively, so their "natural" order (Java enum terminology)
+    // matches the wire order, so FIXMessage.toWire() operates
+    // correctly.  Don't change the order of these enum declarations
+    // unless you want to re-implement FIXMessage.toWire() to maintain
+    // correctness.
 
         //TODO: HopGroup component block tags
 
