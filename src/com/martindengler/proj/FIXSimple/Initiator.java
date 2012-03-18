@@ -20,7 +20,6 @@ public class Initiator {
         FIXEndpoint server = new FIXEndpoint("MARTIN", "SERVER");
         FIXMessage message;
         FIXMessage response;
-        Integer nextSequenceNumber = 1;
 
         System.out.println("Connecting...");
         if (!server.connect("localhost", 16180)) {
@@ -30,21 +29,21 @@ public class Initiator {
         System.out.println("Connected.");
 
 
-        message = FIXMessage.factory(MsgType.LOGON, nextSequenceNumber++);
+        message = FIXMessage.factory(MsgType.LOGON);
         server.deliver(message);
 
         response = server.receive();
         if (response.getMsgType() != MsgType.LOGON)
             throw new IllegalStateException("didn't get LOGON response; got " + response.toString());
 
-        message = FIXMessage.factory(MsgType.NEW_ORDER_SINGLE, nextSequenceNumber++);
+        message = FIXMessage.factory(MsgType.NEW_ORDER_SINGLE);
         server.deliver(message);
 
         response = server.receive();
         if (response.getMsgType() != MsgType.NEW_ORDER_SINGLE)
             throw new IllegalStateException("didn't get NEW_ORDER_SINGLE response; got " + response.toString());
 
-        message = FIXMessage.factory(MsgType.LOGOUT, nextSequenceNumber++);
+        message = FIXMessage.factory(MsgType.LOGOUT);
         server.deliver(message);
 
         response = server.receive();

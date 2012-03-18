@@ -26,6 +26,9 @@ public class FIXEndpoint {
     private BlockingQueue<FIXMessage> incomingMessageQueue;
     private Iterator<FIXMessage> incomingMessageIterator;
 
+    private Integer nextIncomingSequenceNumber = -1;
+    private Integer nextOutgoingSequenceNumber = -1;
+
     private Boolean connected = false; //TODO: make thread-safe
 
 
@@ -74,6 +77,9 @@ public class FIXEndpoint {
 
             this.incomingMessageIterator = this.incomingMessageQueue.iterator();
 
+            this.nextIncomingSequenceNumber = 1;
+            this.nextOutgoingSequenceNumber = 1;
+
             this.connected = true;
         } catch (IOException unrecoverable) {
             this.connected = false;
@@ -90,9 +96,10 @@ public class FIXEndpoint {
 
         try {
             message = message
+                .putM(Tag.MSGSEQNUM,    this.nextOutgoingSequenceNumber++)
                 .putM(Tag.SENDERCOMPID, this.senderCompId)
                 .putM(Tag.TARGETCOMPID, this.targetCompId)
-                .putM(Tag.SENDINGTIME, Calendar.getInstance());
+                .putM(Tag.SENDINGTIME,  Calendar.getInstance());
 
             System.err.println(message);
             this.outgoingMessageQueue.put(message);

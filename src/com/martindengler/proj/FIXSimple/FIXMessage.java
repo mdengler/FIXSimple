@@ -18,35 +18,32 @@ import com.martindengler.proj.FIXSimple.spec.Tag;
 public class FIXMessage extends TreeMap<Tag, String> {
 
     private static final long serialVersionUID = 16180339887L;
-    private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
-    public static byte SOH_byte = 0x01;
-    public static String SOH = String.format("%c", SOH_byte); //FUTURE: make enum?
-
-    public static String FIX_PREAMBLE = "8=FIX.4.2" + SOH + "9=";
+    public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+    public static final byte SOH_byte = 0x01;
+    public static final String SOH = String.format("%c", SOH_byte); //FUTURE: make enum?
+    public static final byte[] FIX_PREAMBLE = ("8=FIX.4.2" + SOH + "9=")
+        .getBytes(ISO_8859_1);
 
 
 
     private int checksum = 0;
 
     private boolean dontRecalcValues = false; // when we read messages from the wire, we don't want to recalc values
+    private byte[] wireBytes; //when this instance was made from the wire rather than built up programmatically
 
     private FIXMessage() {};  //immutable; TODO: actually do this properly
 
 
 
-    public static FIXMessage factory(String messageType, Integer sequenceNumber) {
-        return factory(MsgType.valueOf(messageType), sequenceNumber);
-    }
-
-    public static FIXMessage factory(MsgType messageType, Integer sequenceNumber) {
+    public static FIXMessage factory(MsgType messageType) {
         FIXMessage message = new FIXMessage()
             .putM(Tag.BEGINSTRING,     "FIX.4.2")
             //    Tag.BODYLENGTH       calculated later
             .putM(Tag.MSGTYPE,         messageType.getCode().toString())
             //    Tag.SENDERCOMPID     set later
             //    Tag.TARGETCOMPID     set later
-            .putM(Tag.MSGSEQNUM,       sequenceNumber)
+            //    Tag.MSGSEQNUM,       calculated later
             //    Tag.SENDINGTIME      calculated later
             ;
         return message;
@@ -101,20 +98,24 @@ public class FIXMessage extends TreeMap<Tag, String> {
      * pairs.
      *
      */
-    public static FIXMessage factory(byte[] wireBytes) {
-        return factory(wireBytes, SOH_byte);
+    public static FIXMessage fromWire(byte[] wireBytes) {
+        FIXMessage message = factory(wireBytes, SOH_byte, false);
+        message.wireBytes = wireBytes;
+        return message;
     }
 
 
-    public static FIXMessage factory(byte[] wireBytes, byte delimiter) {
+    public static FIXMessage factory(byte[] wireBytes, byte delimiter, Boolean recalculateValues) {
         return factory(new String(wireBytes, ISO_8859_1),
                 new String(new byte[] {delimiter}),
-                       false);
+                       recalculateValues);
     }
+
 
     public static FIXMessage factory(String fromString) {
         return factory(fromString, SOH);
     }
+
 
     public static FIXMessage factory(String fromString, String delimiter) {
         return factory(fromString, delimiter, true);
@@ -127,8 +128,8 @@ public class FIXMessage extends TreeMap<Tag, String> {
         changed.putAll(this);
         changed.put(key, value);
         if (recalculateValues) {
-            changed.put(Tag.BODYLENGTH, String.format("%d", calculateFIXBodyLength()));
-            changed.put(Tag.CHECKSUM, String.format("%03d", calculateFIXChecksum()));
+            changed.put(Tag.BODYLENGTH, String.format("%d", changed.calculateFIXBodyLength()));
+            changed.put(Tag.CHECKSUM, String.format("%03d", changed.calculateFIXChecksum()));
         }
         return changed;
     }
@@ -164,12 +165,6 @@ public class FIXMessage extends TreeMap<Tag, String> {
     }
 
 
-    public String getTag(Tag t) {
-        return this.containsKey(t) ? this.get(t).toString() : "";
-    }
-
-
-
     @Override
     public String toString() {
         return this.toString(true);
@@ -197,7 +192,7 @@ public class FIXMessage extends TreeMap<Tag, String> {
         if (!this.containsKey(Tag.TARGETCOMPID)) {
             sb.append(" <target unset>");
         } else {
-            sb.append(this.getTag(Tag.TARGETCOMPID));
+            sb.append(this.get(Tag.TARGETCOMPID));
         }
 
         sb.append(" ");
@@ -217,7 +212,15 @@ public class FIXMessage extends TreeMap<Tag, String> {
     }
 
 
+    /**
+     * See also fromWire(...) static method
+     */
     public String toWire() {
+        return this.toWire(false);
+    }
+
+
+    public String toWire(Boolean excludeChecksumPair) {
         StringBuilder sb = new StringBuilder();
         String delimiter = SOH;
 
@@ -225,11 +228,12 @@ public class FIXMessage extends TreeMap<Tag, String> {
         Set<Map.Entry<Tag, String>> entrySet = this.entrySet();
         int size = entrySet.size();
         for (Map.Entry<Tag, String> pair : entrySet) {
+            if (excludeChecksumPair && pair.getKey() == Tag.CHECKSUM)
+                continue;
             sb.append(String.format("%s=%s",
                             pair.getKey().getCode(),
                             pair.getValue()));
-            if (++idx < size)
-                sb.append(delimiter);
+            sb.append(delimiter);
         }
 
         return sb.toString();
@@ -243,18 +247,28 @@ public class FIXMessage extends TreeMap<Tag, String> {
     }
 
 
-    protected Integer calculateFIXBodyLength() {
-        return getWireBytes().length;
+    protected byte[] getWireBytesWithoutChecksumTag() {
+        String wireMessageString = this.toWire(true);
+        return wireMessageString.getBytes(ISO_8859_1);
     }
 
 
-    protected int calculateFIXChecksum() {
-        String wireMessageString = this.toWire();
-        byte[] wireMessageBytes = wireMessageString.getBytes(ISO_8859_1);
+    public Integer calculateFIXBodyLength() {
+        byte[] toCount = this.getWireBytesWithoutChecksumTag();
+        return toCount.length;
+    }
+
+
+    public Integer calculateFIXChecksum() {
+        byte[] wireMessageBytes = this.getWireBytesWithoutChecksumTag();
+
         int checksum = 0;
+
         for (byte b : wireMessageBytes)
             checksum += (int) b;
+
         checksum = checksum % 256;
+
         return checksum;
     }
 
