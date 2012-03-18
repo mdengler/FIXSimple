@@ -1,6 +1,6 @@
 <project name="FIXSimple" default="dist" basedir=".">
     <description>
-        simple example build file
+        FIXSimple trivial build file
     </description>
   <!-- set global properties for this build -->
   <property name="src" location="src"/>
@@ -17,7 +17,9 @@
   <target name="compile" depends="init"
         description="compile the source " >
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" includeAntRuntime="false"/>
+    <javac srcdir="${src}" destdir="${build}" includeAntRuntime="false" debug="true">
+      <compilerarg value="-Xlint"/>
+    </javac>
   </target>
 
   <target name="dist" depends="compile"
