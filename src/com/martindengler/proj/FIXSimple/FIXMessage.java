@@ -29,7 +29,11 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     private int checksum = 0;
 
+    private boolean dontRecalcValues = false; // when we read messages from the wire, we don't want to recalc values
+
     private FIXMessage() {};  //immutable; TODO: actually do this properly
+
+
 
     public static FIXMessage factory(String messageType, Integer sequenceNumber) {
         return factory(MsgType.valueOf(messageType), sequenceNumber);
@@ -54,14 +58,10 @@ public class FIXMessage extends TreeMap<Tag, String> {
     }
 
 
-    public static FIXMessage factory(String wireBytesAsString) {
-        return factory(wireBytesAsString.getBytes(ISO_8859_1));
-    }
-
     /**
      * Parses the message from a string using a custom delimiter
      */
-    public static FIXMessage factory(String wireBytesAsString, String delimiter) {
+    public static FIXMessage factory(String wireBytesAsString, String delimiter, Boolean recalculateValues) {
 
         FIXMessage message = new FIXMessage();
 
@@ -74,14 +74,14 @@ public class FIXMessage extends TreeMap<Tag, String> {
             String[] pair = rawPair.split("=");
 
             if (pair.length != 2)
-                throw new RuntimeException(String.format("FIXMessage.factory():" +
+                throw new IllegalStateException(String.format("FIXMessage.factory():" +
                                 " bad pair %s in message %s",
                                 rawPair, wireBytesAsString));
 
             Tag tag = Tag.fromCode(Integer.parseInt(pair[0]));
             String data = pair[1];
 
-            message = message.putM(tag, data);
+            message = message.putM(tag, data, recalculateValues);
         }
 
         return message;
@@ -108,20 +108,34 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     public static FIXMessage factory(byte[] wireBytes, byte delimiter) {
         return factory(new String(wireBytes, ISO_8859_1),
-                       new String(new byte[] {delimiter}));
+                new String(new byte[] {delimiter}),
+                       false);
+    }
+
+    public static FIXMessage factory(String fromString) {
+        return factory(fromString, SOH);
+    }
+
+    public static FIXMessage factory(String fromString, String delimiter) {
+        return factory(fromString, delimiter, true);
     }
 
 
 
-    public FIXMessage putM(Tag key, String value) {
+    public FIXMessage putM(Tag key, String value, Boolean recalculateValues) {
         FIXMessage changed = new FIXMessage();
         changed.putAll(this);
         changed.put(key, value);
-        changed.put(Tag.BODYLENGTH, String.format("%d", calculateFIXBodyLength()));
-        changed.put(Tag.CHECKSUM, String.format("%03d", calculateFIXChecksum()));
+        if (recalculateValues) {
+            changed.put(Tag.BODYLENGTH, String.format("%d", calculateFIXBodyLength()));
+            changed.put(Tag.CHECKSUM, String.format("%03d", calculateFIXChecksum()));
+        }
         return changed;
     }
 
+    public FIXMessage putM(Tag key, String value) {
+        return putM(key, value, true);
+    }
 
     public FIXMessage putM(Tag key, Integer value) {
         return putM(key, String.format("%d", value)); //TODO: ensure signed
@@ -144,21 +158,50 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
 
     public MsgType getMsgType() {
-        for (Map.Entry<Tag, String> pair : this.entrySet())
-            if (pair.getKey() == Tag.MSGTYPE)
-                return MsgType.fromCode(pair.getValue());
-        throw new IllegalStateException("FIXMessage: no Tag.MSGTYPE tag present");
+        if (!this.containsKey(Tag.MSGTYPE))
+            throw new IllegalStateException("FIXMessage: no Tag.MSGTYPE tag present");
+        return MsgType.fromCode(this.get(Tag.MSGTYPE));
+    }
+
+
+    public String getTag(Tag t) {
+        return this.containsKey(t) ? this.get(t).toString() : "";
     }
 
 
 
     @Override
     public String toString() {
-        return this.toString(",", true);
+        return this.toString(true);
+    }
+
+    public String toString(Boolean verbose) {
+        return this.toString(",", verbose);
     }
 
     public String toString(String delimiter, Boolean verbose) {
         StringBuilder sb = new StringBuilder();
+
+        String msgTypeString = "";
+        if (this.containsKey(Tag.MSGTYPE)) {
+            MsgType msgType = MsgType.fromCode(this.get(Tag.MSGTYPE));
+            msgTypeString = String.format("%s\t(%s)",
+                    msgType.name(), msgType.getCode());
+        } else {
+            msgTypeString = "INVALID: no Tag.MSGTYPE key";
+        }
+        sb.append(msgTypeString);
+
+        sb.append(" -> ");
+
+        if (!this.containsKey(Tag.TARGETCOMPID)) {
+            sb.append(" <target unset>");
+        } else {
+            sb.append(this.getTag(Tag.TARGETCOMPID));
+        }
+
+        sb.append(" ");
+
         int idx = 0;
         Set<Map.Entry<Tag, String>> entrySet = this.entrySet();
         int size = entrySet.size();
@@ -169,12 +212,28 @@ public class FIXMessage extends TreeMap<Tag, String> {
             if (++idx < size)
                 sb.append(delimiter);
         }
+
         return sb.toString();
     }
 
 
     public String toWire() {
-        return this.toString(SOH, false);
+        StringBuilder sb = new StringBuilder();
+        String delimiter = SOH;
+
+        int idx = 0;
+        Set<Map.Entry<Tag, String>> entrySet = this.entrySet();
+        int size = entrySet.size();
+        for (Map.Entry<Tag, String> pair : entrySet) {
+            sb.append(String.format("%s=%s",
+                            pair.getKey().getCode(),
+                            pair.getValue()));
+            if (++idx < size)
+                sb.append(delimiter);
+        }
+
+        return sb.toString();
+
     }
 
 

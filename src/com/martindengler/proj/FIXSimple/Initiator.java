@@ -31,7 +31,6 @@ public class Initiator {
 
 
         message = FIXMessage.factory(MsgType.LOGON, nextSequenceNumber++);
-        System.out.println(message);
         server.deliver(message);
 
         response = server.receive();

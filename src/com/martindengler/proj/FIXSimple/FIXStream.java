@@ -43,7 +43,7 @@ public class FIXStream {
     }
 
     public static FIXStream connect(DatagramSocket ds) {
-        throw new RuntimeException("unimplemented");
+        throw new IllegalStateException("unimplemented");
     }
 
 
@@ -85,7 +85,11 @@ public class FIXStream {
                 public void run() {
                     while (true) {
                         try {
-                            outputWriter.write(outgoingQueue.take().toWire());
+                            FIXMessage outgoing = outgoingQueue.take();
+                            System.err.format("FIXStream.outputHandler.run(): writing message to wire: %s%n", outgoing.toString(false));
+                            outputWriter.write(outgoing.toWire());
+                            outputWriter.flush();
+                            System.err.format("FIXStream.outputHandler.run(): wrote message to wire: %s%n", outgoing.toString(false));
                         } catch (InterruptedException inte) {
                             System.err.println("FIXStream.outputHandler.run(): InterruptedException in outgoingQueue.take(); will retry");
                             System.err.println(inte.getMessage());
@@ -106,33 +110,47 @@ public class FIXStream {
 
 
     private FIXMessage readOneMessage(Reader inputReader) throws IOException {
+
+        System.err.println("readOneMessage() starting");
+
         int c;
         String lineSoFar = "";
-        while ((lineSoFar != FIX_PREAMBLE) && (c = inputReader.read()) != -1) {
+        while (!(lineSoFar.equals(FIX_PREAMBLE))
+               &&
+               (c = inputReader.read()) != -1) {
             lineSoFar += (char) c;
+            System.err.format("readOneMessage() [PRE] read %s (total: %s)%n", c, lineSoFar.replace(FIXMessage.SOH, "<SOH>"));
         }
 
-        if (lineSoFar != FIX_PREAMBLE)
+        if (!lineSoFar.equals(FIX_PREAMBLE))
             throw new IllegalStateException(String.format("problem reading FIX stream; read %s but no FIX Preamble (%s) found.",
                                                           lineSoFar,
                                                           FIX_PREAMBLE.replace(FIXMessage.SOH, "<SOH>")));
 
         String messageLengthAsString = "";
-        while ((c = inputReader.read()) != -1 && (char) c != (char) SOH_byte)
+        while ((c = inputReader.read()) != -1 && (char) c != (char) SOH_byte) {
             messageLengthAsString += (char) c;
+            System.err.format("readOneMessage() [LEN] read %s (total: %s)%n", c, messageLengthAsString.replace(FIXMessage.SOH, "<SOH>"));
+        }
+
+        lineSoFar += messageLengthAsString;
+        lineSoFar += (char) SOH_byte;
 
         Integer messageLength = Integer.parseInt(messageLengthAsString);
         Integer restOfMessageLength = messageLength - FIX_PREAMBLE.length();
         char[] restOfMessage = new char[restOfMessageLength];
         Integer charsRead = inputReader.read(restOfMessage, 0, restOfMessageLength);
         if (charsRead != restOfMessageLength)
-            throw new RuntimeException(String.format("problem reading FIX stream; was supposed to read %s chars (per fix message prefix %s) but actually read %s chars)",
+            throw new IllegalStateException(String.format("problem reading FIX stream; was supposed to read %s chars (per fix message prefix %s) but actually read %s chars)",
                                                      restOfMessageLength,
-                                                     lineSoFar,
+                                                     lineSoFar.replace(FIXMessage.SOH, "<SOH>"),
                                                      charsRead));
-        lineSoFar += restOfMessage;
+        lineSoFar += String.valueOf(restOfMessage);
+        System.err.format("readOneMessage() [RST] read %s (total: %s)%n", String.valueOf(restOfMessage).replace(FIXMessage.SOH, "<SOH>"), lineSoFar.replace(FIXMessage.SOH, "<SOH>"));
 
-        return FIXMessage.factory(lineSoFar + restOfMessage, FIXMessage.SOH);
+        FIXMessage message = FIXMessage.factory(lineSoFar + restOfMessage, FIXMessage.SOH);
+        System.err.format("readOneMessage() [END] read %s message%n", message);
+        return message;
     }
 
 

@@ -86,17 +86,23 @@ public class FIXEndpoint {
 
     public Boolean deliver(FIXMessage message) {
         if (!this.connected)
-            throw new RuntimeException("not connected");
+            throw new IllegalStateException("not connected");
 
         try {
-            this.outgoingMessageQueue.put(message
-                    .putM(Tag.SENDERCOMPID, this.senderCompId)
-                    .putM(Tag.TARGETCOMPID, this.targetCompId)
-                    .putM(Tag.SENDINGTIME, Calendar.getInstance()));
+            message = message
+                .putM(Tag.SENDERCOMPID, this.senderCompId)
+                .putM(Tag.TARGETCOMPID, this.targetCompId)
+                .putM(Tag.SENDINGTIME, Calendar.getInstance());
+
+            System.err.println(message);
+            this.outgoingMessageQueue.put(message);
+            System.err.println("put on queue");
+
         } catch (InterruptedException inte) { //TODO: this is probably not right
             System.err.println("FIXEndpoint.deliver(): interrupted; will NOT retry");
             System.err.println(inte.getMessage());
             System.err.println(inte.toString());
+            inte.printStackTrace();
             return false;
         }
 
@@ -105,14 +111,19 @@ public class FIXEndpoint {
     }
 
 
+    /**
+     * TODO: document that this WILL block
+     */
     public FIXMessage receive() {
         if (!this.connected)
-            throw new RuntimeException("not connected");
+            throw new IllegalStateException("not connected");
 
-        if (this.incomingMessageIterator.hasNext()) {
-            return this.incomingMessageIterator.next();
-        } else {
-            return null;
+        try {
+
+            return this.incomingMessageQueue.take();
+
+        } catch (InterruptedException inte) {
+            throw new IllegalStateException(inte.getMessage(), inte);
         }
     }
 
