@@ -37,7 +37,7 @@ public enum Tag {
         MESSAGEENCODING(347, "Type of message encoding (non-ASCII characters) used in a message's \"Encoded\" fields. Required if any \"Encoding\" fields are used."),
         LASTMSGSEQNUMPROCESSED(369, "The last MsgSeqNum value received by the FIX engine and processed by downstream application, such as trading system or order routing system. Can be specified on every message sent. Useful for detecting a backlog with a counterparty."),
 
-        // Trailier tags
+        // Trailer tags
         SIGNATURELENGTH(93, "Required when trailer contains signature. Note: Not to be included within SecureData field"),
         SIGNATURE(89, "Note: Not to be included within SecureData field"),
         CHECKSUM(10, "Always unencrypted, always last field in message"),
