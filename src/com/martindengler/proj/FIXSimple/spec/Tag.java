@@ -52,7 +52,6 @@ public enum Tag {
         AVGPX(6),
         BASISPXTYPE(419),
         BEGINSEQNO(7),
-        BEGINSTRING(8),
         BENCHMARK(219),
         BIDDESCRIPTOR(400),
         BIDDESCRIPTORTYPE(399),
