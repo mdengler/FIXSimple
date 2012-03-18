@@ -1,6 +1,0 @@
-TODO: document hardcoding of 4.2 (no IoC)
-TODO: review code for design limitations and document
-TODO: add all parts of all messages sent / received that are NOT supported
-TOOD: document enum creation process
-TODO: document any obvious inefficiences
-TODO: document profiling
