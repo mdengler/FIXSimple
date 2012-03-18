@@ -143,11 +143,12 @@ public class AcceptorSimpleClientHandler extends FIXEndpoint
                             != OrdStatus.NEW) {
                         System.err.println("Ignoring NOS with ORDSTATUS != NEW");
                 } else {
+
                     FIXMessage responseMessage = FIXMessage
                         .factory(MsgType.EXECUTION_REPORT)
-                        .putM(Tag.LEAVESQTY,    incomingMessage.get(Tag.ORDERQTY))
-                        .putM(Tag.ORDSTATUS,    OrdStatus.NEW)
-                        .putM(Tag.EXECTYPE,     ExecType.NEW)
+                        .putM(Tag.LEAVESQTY,     incomingMessage.get(Tag.ORDERQTY))
+                        .putM(Tag.ORDSTATUS,     OrdStatus.NEW)
+                        .putM(Tag.EXECTYPE,      ExecType.NEW)
                         .putM(Tag.EXECTRANSTYPE, ExecTransType.NEW)
                         ;
                     for (Tag t : Arrays.asList(Tag.CLORDID,
