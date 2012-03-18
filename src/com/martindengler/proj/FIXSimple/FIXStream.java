@@ -30,10 +30,11 @@ import static com.martindengler.proj.FIXSimple.FIXMessage.SOH_byte;
 
 public class FIXStream {
 
-    public enum FIXStreamState {
+    public enum State {
         UNINITIALIZED,
             UNOPENED,
             ACTIVE,
+            CLOSING,
             CLOSED_IN,
             CLOSED_OUT,
             CLOSED_ALL,
@@ -44,11 +45,14 @@ public class FIXStream {
     private BlockingQueue<FIXMessage> outgoingQueue;
 
     private Executor executor;
-    private FIXStreamState state = FIXStreamState.UNINITIALIZED;
+    private State state = State.UNINITIALIZED;
+
+    private Socket socket;
 
     public static FIXStream connect(Socket conversation) throws IOException {
-        return new FIXStream(new InputStreamReader(conversation.getInputStream()),
-                             new OutputStreamWriter(conversation.getOutputStream()));
+        return new FIXStream(conversation,
+                new InputStreamReader(conversation.getInputStream()),
+                new OutputStreamWriter(conversation.getOutputStream()));
     }
 
     public static FIXStream connect(Reader inputReader, Writer outputWriter) {
@@ -70,8 +74,127 @@ public class FIXStream {
                                                TimeUnit.SECONDS,
                                                new ArrayBlockingQueue<Runnable>(10));
 
-        this.state = FIXStreamState.UNOPENED;
+        this.state = State.UNOPENED;
 
+    }
+
+
+    private FIXStream(Socket conversation,
+            Reader inputReader,
+            Writer outputWriter) {
+        this(inputReader, outputWriter);
+        this.socket = conversation;
+    }
+
+
+    private FIXStream(final Reader inputReader, final Writer outputWriter) {
+        this();
+
+        // TODO: separate somehow
+        Runnable inputHandler = new Runnable() {
+                public void run() {
+                    FIXMessage readMessage;
+                    while (state == State.ACTIVE || state == State.CLOSED_OUT) {
+
+                        try {
+                            readMessage = readOneMessage(inputReader);
+                        } catch (IOException ioe) {
+                            readMessage = null;
+                            System.err.println("FIXStream.inputHandler.run: readOneMessage threw IOException; stopping.");
+                            System.err.println(ioe.getMessage());
+                            System.err.println(ioe.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = State.CLOSED_IN;
+                                break;
+                            case CLOSED_OUT:
+                                state = State.CLOSED_ALL;
+                                break;
+                            }
+                        } catch (RuntimeException e) {
+                            System.err.println("FIXStream.inputHandler.run: readOneMessage threw IOException; stopping.");
+                            System.err.println(e.getMessage());
+                            System.err.println(e.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = State.CLOSED_IN;
+                                break;
+                            case CLOSED_OUT:
+                                state = State.CLOSED_ALL;
+                                break;
+                            }
+                            throw e;
+                        }
+
+                        if (readMessage == null) {
+                            System.err.println("FIXStream.inputHandler.run: stream is closed for messages");
+                            switch (state) {
+                            case ACTIVE:
+                                state = State.CLOSED_IN;
+                                break;
+                            case CLOSED_OUT:
+                                state = State.CLOSED_ALL;
+                                break;
+                            }
+                            return;
+                        } else {
+                            System.err.format("FIXStream.inputHandler.run: got message from readOneMessage%n");
+                            System.err.println(readMessage.toString());
+                            incomingQueue.add(readMessage);
+                            System.err.println("..added to incomingQueue");
+                        }
+
+                    }
+
+                    System.err.println("inputhandler finished in state " + state);
+
+                }
+            };
+
+        Runnable outputHandler = new Runnable() {
+                public void run() {
+                    while (state == State.ACTIVE || state == State.CLOSED_IN) {
+                        try {
+                            FIXMessage outgoing = outgoingQueue.take();
+                            System.err.format("FIXStream.outputHandler.run(): writing message to wire: %s%n", outgoing.toString(false));
+                            outputWriter.write(outgoing.toWire());
+                            outputWriter.flush();
+                            System.err.format("FIXStream.outputHandler.run(): wrote message to wire: %s%n", outgoing.toString(false));
+                        } catch (InterruptedException inte) {
+                            System.err.println("FIXStream.outputHandler.run(): InterruptedException in outgoingQueue.take(); will retry");
+                            System.err.println(inte.getMessage());
+                            System.err.println(inte.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = State.CLOSED_OUT;
+                                break;
+                            case CLOSED_IN:
+                                state = State.CLOSED_ALL;
+                                break;
+                            }
+                        } catch (IOException ioe) {
+                            System.err.println("FIXStream.outputHandler.run(): IOException in outputWriter.write(); stopping");
+                            System.err.println(ioe.getMessage());
+                            System.err.println(ioe.toString());
+                            switch (state) {
+                            case ACTIVE:
+                                state = State.CLOSED_OUT;
+                                break;
+                            case CLOSED_IN:
+                                state = State.CLOSED_ALL;
+                                break;
+                            }
+                            break;
+                        }
+                    }
+                    System.err.println("outputHandler finished in state " + state);
+                }
+            };
+
+        this.state = State.ACTIVE;
+
+        this.executor.execute(inputHandler);
+        this.executor.execute(outputHandler);
     }
 
 
@@ -85,107 +208,30 @@ public class FIXStream {
     }
 
 
-    private FIXStream(final Reader inputReader, final Writer outputWriter) {
-        this();
-
-        // TODO: separate somehow
-        Runnable inputHandler = new Runnable() {
-                public void run() {
-                    FIXMessage readMessage;
-                    for (;;) {
-                        try {
-                            readMessage = readOneMessage(inputReader);
-                        } catch (IOException ioe) {
-                            readMessage = null;
-                            System.err.println("FIXStream.inputHandler.run: readOneMessage threw IOException; stopping.");
-                            System.err.println(ioe.getMessage());
-                            System.err.println(ioe.toString());
-                            switch (state) {
-                            case ACTIVE:
-                                state = FIXStreamState.CLOSED_IN;
-                                break;
-                            case CLOSED_OUT:
-                                state = FIXStreamState.CLOSED_ALL;
-                                break;
-                            }
-                        } catch (RuntimeException e) {
-                            System.err.println("FIXStream.inputHandler.run: readOneMessage threw IOException; stopping.");
-                            System.err.println(e.getMessage());
-                            System.err.println(e.toString());
-                            switch (state) {
-                            case ACTIVE:
-                                state = FIXStreamState.CLOSED_IN;
-                                break;
-                            case CLOSED_OUT:
-                                state = FIXStreamState.CLOSED_ALL;
-                                break;
-                            }
-                            throw e;
-                        }
-                        if (readMessage == null) {
-                            System.err.println("FIXStream.inputHandler.run: stream is closed for messages");
-                            switch (state) {
-                            case ACTIVE:
-                                state = FIXStreamState.CLOSED_IN;
-                                break;
-                            case CLOSED_OUT:
-                                state = FIXStreamState.CLOSED_ALL;
-                                break;
-                            }
-                            return;
-                        } else {
-                            System.err.format("FIXStream.inputHandler.run: got message from readOneMessage%n");
-                            System.err.println(readMessage.toString());
-                            incomingQueue.add(readMessage);
-                            System.err.println("..added to incomingQueue");
-                        }
-                    }
-                }
-            };
-
-        Runnable outputHandler = new Runnable() {
-                public void run() {
-                    while (true) {
-                        try {
-                            FIXMessage outgoing = outgoingQueue.take();
-                            System.err.format("FIXStream.outputHandler.run(): writing message to wire: %s%n", outgoing.toString(false));
-                            outputWriter.write(outgoing.toWire());
-                            outputWriter.flush();
-                            System.err.format("FIXStream.outputHandler.run(): wrote message to wire: %s%n", outgoing.toString(false));
-                        } catch (InterruptedException inte) {
-                            System.err.println("FIXStream.outputHandler.run(): InterruptedException in outgoingQueue.take(); will retry");
-                            System.err.println(inte.getMessage());
-                            System.err.println(inte.toString());
-                            switch (state) {
-                            case ACTIVE:
-                                state = FIXStreamState.CLOSED_OUT;
-                                break;
-                            case CLOSED_IN:
-                                state = FIXStreamState.CLOSED_ALL;
-                                break;
-                            }
-                        } catch (IOException ioe) {
-                            System.err.println("FIXStream.outputHandler.run(): IOException in outputWriter.write(); stopping");
-                            System.err.println(ioe.getMessage());
-                            System.err.println(ioe.toString());
-                            switch (state) {
-                            case ACTIVE:
-                                state = FIXStreamState.CLOSED_OUT;
-                                break;
-                            case CLOSED_IN:
-                                state = FIXStreamState.CLOSED_ALL;
-                                break;
-                            }
-                            break;
-                        }
-                    }
-                }
-            };
-
-        this.state = FIXStreamState.ACTIVE;
-
-        this.executor.execute(inputHandler);
-        this.executor.execute(outputHandler);
+    public synchronized void stop() {
+        this.state = State.CLOSING;
+        Integer countdownToForcedExit = 10;
+        Integer countdownByMilliseconds = 100;
+        while (this.state != State.CLOSED_ALL) {
+            try {
+                Thread.currentThread().sleep(countdownByMilliseconds);
+            } catch (InterruptedException ignored) {}
+            if (--countdownToForcedExit <= 0)
+                this.state = State.CLOSED_ALL;
+        }
+        if (this.socket != null
+                && !this.socket.isClosed()) {
+            try {
+                this.socket.close();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                // FUTURE: do something better here
+                System.err.println("FIXStream.stop():" +
+                        " IOException on socket; leaving things as they" +
+                        " are :(");
+            }
+        }
+        System.err.println("FIXStream.stop(): stopped");
     }
 
 
