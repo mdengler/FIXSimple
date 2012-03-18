@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 import com.martindengler.proj.FIXSimple.spec.MsgType;
+import com.martindengler.proj.FIXSimple.spec.OrdStatus;
 import com.martindengler.proj.FIXSimple.spec.Tag;
 
 
@@ -155,6 +156,16 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     public FIXMessage putM(Tag key, Calendar value) {
         return putM(key, String.format("%1$tY%1$tm%1$td-%1$tH:%1$tM:%1$tS", value));
+    }
+
+
+    public FIXMessage putM(Tag key, Tag t) {
+        return putM(key, t.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, OrdStatus s) {
+        return putM(key, s.toString());
     }
 
 
