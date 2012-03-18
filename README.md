@@ -74,7 +74,7 @@ Overview
 
 Key classes
 
-run
+
 
 TODO: add all parts of all messages sent / received that are NOT supported
 TOOD: document enum creation process
@@ -84,12 +84,12 @@ TODO: consider problems in http://www.odi.ch/prog/design/newbies.php#10
 TODO: consider problems in http://zguide.zeromq.org/page:all#Why-We-Needed-MQ
 TODO: ensure getters are consistently named; getFoo() or foo()
 
-
-
-TODO: initiator doesn't exit when connection dropped
+TODO: putM -> put
 TODO: ensure use of int vs Integer is sensible and consistent
 TODO: ensure System.err.println/format calls are removed where appropriate
 TODO: sanity check design vs. quickfix/j
 TODO: check 80 char line lengths
 TODO: write tests
 TODO: performance testing
+TODO: add license comments to code
+TODO: add style guide discussion http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html#styleguide
