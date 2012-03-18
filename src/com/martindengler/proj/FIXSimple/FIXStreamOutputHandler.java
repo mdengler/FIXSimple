@@ -1,32 +1,8 @@
 package com.martindengler.proj.FIXSimple;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
-import java.net.DatagramSocket;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-
-import com.martindengler.proj.FIXSimple.spec.MsgType;
-import com.martindengler.proj.FIXSimple.spec.Tag;
-
-import static com.martindengler.proj.FIXSimple.FIXMessage.FIX_PREAMBLE;
-import static com.martindengler.proj.FIXSimple.FIXMessage.ISO_8859_1;
-import static com.martindengler.proj.FIXSimple.FIXMessage.SOH_byte;
 
 
 public class FIXStreamOutputHandler implements Callable<Object> {

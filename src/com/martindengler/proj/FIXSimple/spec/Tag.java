@@ -1,8 +1,8 @@
 package com.martindengler.proj.FIXSimple.spec;
 
-import java.util.Map;
-import java.util.HashMap;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public enum Tag {

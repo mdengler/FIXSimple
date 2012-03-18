@@ -1,15 +1,13 @@
 package com.martindengler.proj.FIXSimple;
 
 
+import com.martindengler.proj.FIXSimple.spec.Tag;
+import com.martindengler.proj.util.UTCCalendar;
+
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
-
-
-import com.martindengler.proj.FIXSimple.spec.Tag;
-import com.martindengler.proj.util.UTCCalendar;
 
 
 /**

@@ -1,19 +1,13 @@
 package com.martindengler.proj.FIXSimple;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-
 import com.martindengler.proj.FIXSimple.spec.ExecTransType;
 import com.martindengler.proj.FIXSimple.spec.ExecType;
 import com.martindengler.proj.FIXSimple.spec.MsgType;
 import com.martindengler.proj.FIXSimple.spec.OrdStatus;
 import com.martindengler.proj.FIXSimple.spec.Tag;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class AcceptorSimpleClientHandler extends FIXEndpoint
     implements Runnable {

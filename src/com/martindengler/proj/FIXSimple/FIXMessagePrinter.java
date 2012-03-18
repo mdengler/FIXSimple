@@ -1,16 +1,15 @@
 package com.martindengler.proj.FIXSimple;
 
 
+import com.martindengler.proj.FIXSimple.spec.MsgType;
+import com.martindengler.proj.FIXSimple.spec.Tag;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
-
-import com.martindengler.proj.FIXSimple.spec.MsgType;
-import com.martindengler.proj.FIXSimple.spec.OrdStatus;
-import com.martindengler.proj.FIXSimple.spec.Tag;
 
 
 public abstract class FIXMessagePrinter {
