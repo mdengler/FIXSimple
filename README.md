@@ -16,10 +16,21 @@ ISO-8895-1-encoded text (mostly) delimited by the SOH (ASCII 0x01)
 character.
 
 
-Building & Installation
+Building
 --------
 
 Run "ant".  For full instructions, see HACKING file.
+
+
+Running
+-------
+
+Run "ant client" or "ant server" as desired.
+TODO: implement
+TODO: implement Eclipse launchers
+TODO: implement IntelliJ launchers
+TODO: test Eclipse launchers on Windows
+TODO: test IntelliJ launchers on Windows
 
 
 Limitations
@@ -35,16 +46,35 @@ required of a production-ready FIX client / server library.  Some
 design limitations (and reason for) besides the ones mentioned above
 are:
 
-Not mockable (for simplicity)
-FIX Protocol version is hardcoded (simplicity)
-Client library is not MT-safe (simplicity)
-Only supports message tags required for Logon/NewOrderSingle/Heartbeat/Logout
-TODO: review code for design limitations and document
-Minimal Javadoc comments (for simplicity)
-Minimal build system support (ant, eclipse, intellij projects)
+ - Not mockable (for simplicity)
 
-FIXSimple documents any obvious areas with room for improvement in the code.
+ - FIX Protocol version is hardcoded (simplicity)
 
+ - Some effort has been made to make server and client classes
+   MT-safe, but a rigourous audit has not been completed, nor has
+   extensive stress-testing taken place
+
+ - Only supports message tags required for
+   Logon/NewOrderSingle/Heartbeat/Logout
+
+ - TODO: review code for design limitations and document
+
+ - Minimal Javadoc comments (for simplicity)
+
+ - Minimal build system support (ant, eclipse, intellij projects)
+
+FIXSimple documents any obvious areas with room for improvement in the
+code.
+
+
+Design commentary
+-----------------
+
+Overview
+
+Key classes
+
+run
 
 TODO: add all parts of all messages sent / received that are NOT supported
 TOOD: document enum creation process
@@ -62,3 +92,4 @@ TODO: ensure System.err.println/format calls are removed where appropriate
 TODO: sanity check design vs. quickfix/j
 TODO: check 80 char line lengths
 TODO: write tests
+TODO: performance testing
