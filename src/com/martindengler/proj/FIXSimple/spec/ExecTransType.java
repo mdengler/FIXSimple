@@ -5,30 +5,28 @@ import java.util.HashMap;
 import java.util.EnumSet;
 
 
-public enum HandlInst {
-    // comments are from the FIX spec and sometimes unhelpfully
-    // cryptic
-        AUTOMATED_PRIVATE("1"),
-        AUTOMATED_PUBLIC("2"),
-        MANUAL("3"),
-
+public enum ExecTransType {
+        CANCEL("1"),
+        CORRECT("2"),
+        NEW("0"),
+        STATUS("3"),
         ;
 
-    private static final Map<String, HandlInst> lookup
-        = new HashMap<String, HandlInst>();
+    private static final Map<String, ExecTransType> lookup
+        = new HashMap<String, ExecTransType>();
 
     static {
-        for(HandlInst t : EnumSet.allOf(HandlInst.class))
+        for(ExecTransType t : EnumSet.allOf(ExecTransType.class))
             lookup.put(t.getCode(), t);
     }
 
     private String code;
 
-    public static HandlInst fromCode(String code) {
+    public static ExecTransType fromCode(String code) {
         return lookup.get(code);
     }
 
-    private HandlInst(String code) {
+    private ExecTransType(String code) {
         this.code = code;
     }
 

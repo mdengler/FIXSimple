@@ -365,6 +365,7 @@ public enum Tag {
         SETTLINSTTRANSTYPE(163),
         SETTLLOCATION(166),
         SETTLMNTTYP(63),
+        SETTLEMENTTYPE(63),  // previous abbreviation is an abomination
         SHARES(53),
         SIDE(54),
         SIDEVALUE1(396),

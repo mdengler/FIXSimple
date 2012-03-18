@@ -1,18 +1,27 @@
 package com.martindengler.proj.FIXSimple;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.Arrays;
-import java.util.ArrayList;
 
+import com.martindengler.proj.FIXSimple.spec.CommType;
+import com.martindengler.proj.FIXSimple.spec.ExecInst;
+import com.martindengler.proj.FIXSimple.spec.ExecTransType;
+import com.martindengler.proj.FIXSimple.spec.ExecType;
+import com.martindengler.proj.FIXSimple.spec.HandlInst;
 import com.martindengler.proj.FIXSimple.spec.MsgType;
 import com.martindengler.proj.FIXSimple.spec.OrdStatus;
+import com.martindengler.proj.FIXSimple.spec.OrdType;
+import com.martindengler.proj.FIXSimple.spec.SettlementType;
+import com.martindengler.proj.FIXSimple.spec.Side;
 import com.martindengler.proj.FIXSimple.spec.Tag;
+import com.martindengler.proj.FIXSimple.spec.TimeInForce;
 
 
 //TODO: put in spec/ as FIXMessage42?
@@ -164,8 +173,53 @@ public class FIXMessage extends TreeMap<Tag, String> {
     }
 
 
+    public FIXMessage putM(Tag key, CommType ct) {
+        return putM(key, ct.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, ExecType et) {
+        return putM(key, et.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, ExecInst ei) {
+        return putM(key, ei.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, ExecTransType ett) {
+        return putM(key, ett.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, HandlInst hi) {
+        return putM(key, hi.toString());
+    }
+
+
     public FIXMessage putM(Tag key, OrdStatus s) {
         return putM(key, s.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, OrdType ot) {
+        return putM(key, ot.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, SettlementType st) {
+        return putM(key, st.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, Side s) {
+        return putM(key, s.toString());
+    }
+
+
+    public FIXMessage putM(Tag key, TimeInForce tif) {
+        return putM(key, tif.toString());
     }
 
 

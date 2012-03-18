@@ -5,30 +5,27 @@ import java.util.HashMap;
 import java.util.EnumSet;
 
 
-public enum HandlInst {
-    // comments are from the FIX spec and sometimes unhelpfully
-    // cryptic
-        AUTOMATED_PRIVATE("1"),
-        AUTOMATED_PUBLIC("2"),
-        MANUAL("3"),
-
+public enum CommType {
+        ABSOLUTE("2"),
+        PERCENTAGE("2"),
+        PER_SHARE("1"),
         ;
 
-    private static final Map<String, HandlInst> lookup
-        = new HashMap<String, HandlInst>();
+    private static final Map<String, CommType> lookup
+        = new HashMap<String, CommType>();
 
     static {
-        for(HandlInst t : EnumSet.allOf(HandlInst.class))
+        for(CommType t : EnumSet.allOf(CommType.class))
             lookup.put(t.getCode(), t);
     }
 
     private String code;
 
-    public static HandlInst fromCode(String code) {
+    public static CommType fromCode(String code) {
         return lookup.get(code);
     }
 
-    private HandlInst(String code) {
+    private CommType(String code) {
         this.code = code;
     }
 

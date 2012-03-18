@@ -4,12 +4,12 @@ package com.martindengler.proj.FIXSimple;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Calendar;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 
 import com.martindengler.proj.FIXSimple.spec.Tag;
+import com.martindengler.proj.util.UTCCalendar;
 
 
 /**
@@ -76,7 +76,7 @@ public abstract class FIXEndpoint {
                 .putM(Tag.MSGSEQNUM,    this.nextOutgoingSequenceNumber++)
                 .putM(Tag.SENDERCOMPID, this.senderCompId)
                 .putM(Tag.TARGETCOMPID, this.targetCompId)
-                .putM(Tag.SENDINGTIME,  Calendar.getInstance());
+                .putM(Tag.SENDINGTIME,  UTCCalendar.getInstance());
 
             System.err.println(message);
             this.outgoingMessageQueue.put(message);
