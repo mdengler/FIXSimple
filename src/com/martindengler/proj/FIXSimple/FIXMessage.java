@@ -76,7 +76,7 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
     public static final byte SOH_byte = 0x01;
-    public static final String SOH = String.format("%b", SOH_byte); //FUTURE: make enum?
+    public static final String SOH = String.format("%c", (char) SOH_byte); //FUTURE: this is fragile
     public static final byte[] FIX_PREAMBLE = ("8=FIX.4.2" + SOH + "9=")
         .getBytes(ISO_8859_1);
 
