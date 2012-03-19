@@ -23,13 +23,27 @@ Acceptor -> ServerSocket.accept()
 handleState() implements a trivial state machine to respond as
 required to the incoming messages from Initiators.
 
-The lower-level incoming and outgoing queues are managed by FIXEndpoint, which AcceptorSimpleClientHandler extends:
+The lower-level incoming and outgoing queues are managed by
+FIXEndpoint, which AcceptorSimpleClientHandler extends:
 
 FIXEndpoint -----> .deliver() --> BlockingQueue --> FIXStream
          ^                                            |
          `-------- .receive() <-- BlockingQueue <----/
 
 
+Finally, at one of the lowest levels, FIXStream uses two helper
+Callable implementors to manage the from- and to- "the wire"
+converters:
+
+FIXStream ----<composes>----
+  |                          \
+  |  BlockingQueue --> FIXStreamOutputHandler --> Writer
+  |                                                 |
+<composes>                                          |
+  |                                                 |- Socket -- Internet
+  `--------------------------                       |
+                             \                      |
+     BlockingQueue <-- FIXStreamInputHandler  <-- Reader
 
 
 Testing
@@ -37,6 +51,25 @@ Testing
 
 Besides running the code, an example test case is included in the
 test/com/martindengler/proj/FIXSimple/FIXMessageTest.java source file.
+
+
+Business Analysis
+-----------------
+
+I attempted to make a state transition diagram in dot (included,
+incomplete: specs/statetransitions.dot) to document and drive my
+simple state machine.  I started with the FIXT 1.1 spec's appendix,
+which is truly appalling for that sort of thing.  I gave of in the
+interests of being able to write some code, but the diagram deserves
+to be finished.
+
+The FIX 4.2 documentation is slightly better, in that it hints at an
+adjacancy-matrix representation of a state machine related to New
+Order Single Messages.  However, this is only a teasing illusion of
+consistency, and no such state transition diagram exists.  In a
+vendor-hungry world, such documentation increases no-one's margins.
+Implementors and certifiers would do well to champion such efforts,
+however, as the benefits to the client are manifest.
 
 
 
@@ -75,6 +108,32 @@ could actually be more distributed than the Acceptors to handle the
 increased calculation load (whereas the Acceptors are filehandle /
 network port constrained).
 
+In particular, here are some limitations and future work
+
+- FUTURE: automate enum creation process - 4.2-spec enum classes were
+  hand generated using emacs macros; to reduce errors and improve
+  maintainability this should be changed to generate code from
+  FIXWiki, thus improving the documentation for the community as well
+
+- TODO: many obvious inefficiences remain (for example, string copying
+  is profligate) - a full catalog and profiling review will be
+  beneficial
+
+- TODO: automated profiling to establish baselines will enable
+  performance improvement tracking over time
+
+- TODO: sanity check design vs. quickfix/j: a competitive review of
+  style and architecture of QuickFix/J could be done to highlight
+  areas of improvement
+
+- TODO: write tests - due to lack of time only an example set of tests
+  were produced, but automated test suites usint JUnit 4 or TestNG
+  should be constructed
+
+- TODO: IDEA IDE launcher - simple shell scripts were delivered
+  instead of the requested IDE launchers
+
+
 
 Coding Style
 ------------
@@ -88,18 +147,6 @@ In particular, these areas require review:
 
 - TODO: document type-safety of FIXMessage getters & setters and
   future directions (e.g., consider a typesafe message.getOrdCapacity)
-
-- TOOD: automate enum creation process - 4.2-spec enum classes were
-  hand generated using emacs macros; to reduce errors and improve
-  maintainability this should be changed to generate code from
-  FIXWiki, thus improving the documentation for the community as well
-
-- TODO: many obvious inefficiences remain (for example, string copying
-  is profligate) - a full catalog and profiling review will be
-  beneficial
-
-- TODO: automated profiling to establish baselines will enable
-  performance improvement tracking over time
 
 - TODO: a review of the Best Practices at
   [http://www.odi.ch/prog/design/newbies.php#10] and
@@ -121,18 +168,7 @@ In particular, these areas require review:
 - TODO: ensure System.err.println/format calls are removed where
   appropriate; a proper logging framework may be judiciously used
 
-- TODO: sanity check design vs. quickfix/j: a competitive review of
-  style and architecture of QuickFix/J could be done to highlight
-  areas of improvement
-
 - TODO: normalise code to 80 char line length - inconsistencies were
   noted in the final code review
-
-- TODO: write tests - due to lack of time only an example set of tests
-  were produced, but automated test suites usint JUnit 4 or TestNG
-  should be constructed
-
-- TODO: IDEA IDE launcher - simple shell scripts were delivered
-  instead of the requested IDE launchers
 
 
