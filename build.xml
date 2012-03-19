@@ -22,6 +22,11 @@
     </javac>
   </target>
 
+  <target name="javadoc" depends="compile"
+          description="generate the javadocs" >
+    <javadoc sourcepath="${src}" classpath="build" destdir="${build}/../doc" />
+  </target>
+
   <target name="dist" depends="compile"
         description="generate the distribution" >
     <!-- Create the distribution directory -->
