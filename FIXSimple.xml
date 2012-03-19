@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="fixsimple" default="all">
+  
+  
+  <property file="FIXSimple.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/.pyc/**"/>
+    <exclude name="**/.pyo/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/*.lib/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/.bundle/**"/>
+    <exclude name="**/*.rbc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.zip"/>
+    <include name="*.apk"/>
+    <include name="*.war"/>
+    <include name="*.egg"/>
+    <include name="*.ear"/>
+    <include name="*.swc"/>
+    <include name="*.jar"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <include name="**/?*.properties"/>
+    <include name="**/?*.xml"/>
+    <include name="**/?*.gif"/>
+    <include name="**/?*.png"/>
+    <include name="**/?*.jpeg"/>
+    <include name="**/?*.jpg"/>
+    <include name="**/?*.html"/>
+    <include name="**/?*.dtd"/>
+    <include name="**/?*.tld"/>
+    <include name="**/?*.ftl"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.1.6" value="${jdk.home.1.6}/bin"/>
+  <path id="jdk.classpath.1.6">
+    <fileset dir="${jdk.home.1.6}">
+      <include name="../java-1.6.0/jre/lib/management-agent.jar"/>
+      <include name="../java-1.6.0/jre/lib/jsse.jar"/>
+      <include name="../java-1.6.0/jre/lib/rhino.jar"/>
+      <include name="../java-1.6.0/jre/lib/resources.jar"/>
+      <include name="../java-1.6.0/jre/lib/charsets.jar"/>
+      <include name="../java-1.6.0/jre/lib/jce.jar"/>
+      <include name="../java-1.6.0/jre/lib/rt.jar"/>
+      <include name="../java-1.6.0/jre/lib/ext/localedata.jar"/>
+      <include name="../java-1.6.0/jre/lib/ext/sunjce_provider.jar"/>
+      <include name="../java-1.6.0/jre/lib/ext/sunpkcs11.jar"/>
+      <include name="../java-1.6.0/jre/lib/ext/gnome-java-bridge.jar"/>
+      <include name="../java-1.6.0/jre/lib/ext/pulse-java.jar"/>
+      <include name="../java-1.6.0/jre/lib/ext/dnsns.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.1.6}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.1.6}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.1.6"/>
+  <!-- Register Custom Compiler Taskdefs -->
+  <property name="javac2.home" value="${idea.home}/lib"/>
+  <path id="javac2.classpath">
+    <pathelement location="${javac2.home}/javac2.jar"/>
+    <pathelement location="${javac2.home}/jdom.jar"/>
+    <pathelement location="${javac2.home}/asm.jar"/>
+    <pathelement location="${javac2.home}/asm-commons.jar"/>
+    <pathelement location="${javac2.home}/jgoodies-forms.jar"/>
+  </path>
+  <target name="register.custom.compilers">
+    <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="javac2.classpath"/>
+    <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="javac2.classpath"/>
+  </target>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module FIXSimple -->
+  
+  <dirname property="module.fixsimple.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.fixsimple" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.fixsimple" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.fixsimple" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.fixsimple" value="${compiler.args}"/>
+  
+  <property name="fixsimple.output.dir" value="${module.fixsimple.basedir}/out/production/FIXSimple"/>
+  <property name="fixsimple.testoutput.dir" value="${module.fixsimple.basedir}/out/test/FIXSimple"/>
+  
+  <path id="fixsimple.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="fixsimple.module.production.classpath">
+    <path refid="${module.jdk.classpath.fixsimple}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+  </path>
+  
+  <path id="fixsimple.runtime.production.module.classpath">
+    <pathelement location="${fixsimple.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+  </path>
+  
+  <path id="fixsimple.module.classpath">
+    <path refid="${module.jdk.classpath.fixsimple}"/>
+    <pathelement location="${fixsimple.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+  </path>
+  
+  <path id="fixsimple.runtime.module.classpath">
+    <pathelement location="${fixsimple.testoutput.dir}"/>
+    <pathelement location="${fixsimple.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.fixsimple">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.fixsimple">
+    <patternset refid="excluded.from.module.fixsimple"/>
+  </patternset>
+  
+  <path id="fixsimple.module.sourcepath">
+    <dirset dir="${module.fixsimple.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  <path id="fixsimple.module.test.sourcepath">
+    <dirset dir="${module.fixsimple.basedir}">
+      <include name="test"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.fixsimple" depends="compile.module.fixsimple.production,compile.module.fixsimple.tests" description="Compile module FIXSimple"/>
+  
+  <target name="compile.module.fixsimple.production" depends="register.custom.compilers" description="Compile module FIXSimple; production classes">
+    <mkdir dir="${fixsimple.output.dir}"/>
+    <javac2 destdir="${fixsimple.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.fixsimple}/javac">
+      <compilerarg line="${compiler.args.fixsimple}"/>
+      <bootclasspath refid="fixsimple.module.bootclasspath"/>
+      <classpath refid="fixsimple.module.production.classpath"/>
+      <src refid="fixsimple.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.fixsimple"/>
+    </javac2>
+    
+    <copy todir="${fixsimple.output.dir}">
+      <fileset dir="${module.fixsimple.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.fixsimple.tests" depends="register.custom.compilers,compile.module.fixsimple.production" description="compile module FIXSimple; test classes" unless="skip.tests">
+    <mkdir dir="${fixsimple.testoutput.dir}"/>
+    <javac2 destdir="${fixsimple.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.fixsimple}/javac">
+      <compilerarg line="${compiler.args.fixsimple}"/>
+      <bootclasspath refid="fixsimple.module.bootclasspath"/>
+      <classpath refid="fixsimple.module.classpath"/>
+      <src refid="fixsimple.module.test.sourcepath"/>
+      <patternset refid="excluded.from.compilation.fixsimple"/>
+    </javac2>
+    
+    <copy todir="${fixsimple.testoutput.dir}">
+      <fileset dir="${module.fixsimple.basedir}/test">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="clean.module.fixsimple" description="cleanup module">
+    <delete dir="${fixsimple.output.dir}"/>
+    <delete dir="${fixsimple.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.fixsimple" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.fixsimple" description="build all modules"/>
+  
+  <target name="all" depends="build.modules" description="build all"/>
+</project>

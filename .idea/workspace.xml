@@ -2,32 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="edfd6b97-4735-4a0b-96d5-1ce378dbdd3d" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessageTest.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/junit.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/test/com/martindengler/proj/FIXSimple/FIXMessageTest.java" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessageTest.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FIXSimple.iml" afterPath="$PROJECT_DIR$/FIXSimple.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/Acceptor.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/Acceptor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/AcceptorSimpleClientHandler.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/AcceptorSimpleClientHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXEndpoint.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXEndpoint.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXEndpointConnector.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXEndpointConnector.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessage.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessagePrinter.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessagePrinter.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXStreamInputHandler.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXStreamInputHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXStreamOutputHandler.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXStreamOutputHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/Initiator.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/Initiator.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/CommType.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/CommType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/ExecInst.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/ExecInst.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/ExecTransType.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/ExecTransType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/ExecType.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/ExecType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/HandlInst.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/HandlInst.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/IDSource.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/IDSource.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/MsgType.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/MsgType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/OrdStatus.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/OrdStatus.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/OrdType.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/OrdType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/OrderCapacity.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/OrderCapacity.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/SettlementType.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/SettlementType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/Side.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/Side.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/Tag.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/Tag.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/TimeInForce.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/TimeInForce.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/Urgency.java" afterPath="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/spec/Urgency.java" />
     </list>
     <ignored path="FIXSimple.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -88,16 +69,29 @@
       <file leaf-file-name="FIXMessage.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessage.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="3" column="22" selection-start="91" selection-end="91" vertical-scroll-proportion="0.0795053">
-              <folding />
+            <state line="58" column="16" selection-start="1984" selection-end="1984" vertical-scroll-proportion="0.8172043">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="FIXMessageTest.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessageTest.java">
+        <entry file="file://$PROJECT_DIR$/test/com/martindengler/proj/FIXSimple/FIXMessageTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="13" column="33" selection-start="325" selection-end="325" vertical-scroll-proportion="0.0">
+            <state line="8" column="20" selection-start="220" selection-end="220" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Assert.class" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar://$APPLICATION_HOME_DIR$/lib/junit-4.10.jar!/org/junit/Assert.class">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="1" column="45" selection-start="112" selection-end="112" vertical-scroll-proportion="-0.0">
               <folding />
             </state>
           </provider>
@@ -119,6 +113,7 @@
     <option name="changedFiles">
       <list>
         <option value="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessageTest.java" />
+        <option value="$PROJECT_DIR$/test/com/martindengler/proj/FIXSimple/FIXMessageTest.java" />
         <option value="$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessage.java" />
       </list>
     </option>
@@ -142,7 +137,33 @@
           <State>
             <id>Android</id>
           </State>
+          <State>
+            <id>Class structure</id>
+          </State>
+          <State>
+            <id>Internationalization issues</id>
+          </State>
+          <State>
+            <id>Performance issues</id>
+          </State>
+          <State>
+            <id>Properties Files</id>
+          </State>
+          <State>
+            <id>UI Form Problems</id>
+          </State>
+          <State>
+            <id>XML</id>
+          </State>
+          <State>
+            <id>XPath</id>
+          </State>
         </expanded-state>
+        <selected-state>
+          <State>
+            <id>Abstraction issues</id>
+          </State>
+        </selected-state>
       </profile-state>
     </entry>
   </component>
@@ -201,6 +222,24 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FIXSimple" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FIXSimple" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FIXSimple" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="src" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -215,19 +254,26 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="GenerateAntBuildDialog.generateIdeaHomeProperty" value="false" />
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="JUnit3" />
-    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.proportion" value="0.15" />
     <property name="options.splitter.main.proportions" value="0.3" />
+    <property name="GenerateAntBuildDialog.generateSingleFile" value="true" />
     <property name="MemberChooser.sorted" value="false" />
-    <property name="options.lastSelected" value="Errors" />
+    <property name="options.lastSelected" value="preferences.keymap" />
     <property name="recentsLimit" value="5" />
-    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="GenerateAntBuildDialog.inclineRuntiemClasspath" value="false" />
+    <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="GenerateAntBuildDialog.outputFileNameProperty" value="FIXSimple" />
     <property name="MemberChooser.copyJavadoc" value="false" />
+    <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.includeInheritedMembers" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
+    <property name="GenerateAntBuildDialog.backupFiles" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
     <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
@@ -399,12 +445,12 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3277027" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3277027" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21818182" sideWeight="0.24237289" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32928678" sideWeight="0.6722973" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25872535" sideWeight="0.6722973" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -474,17 +520,28 @@
         <state line="8" column="9" selection-start="213" selection-end="213" vertical-scroll-proportion="0.09252669" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessageTest.java">
+    <entry file="jar://$APPLICATION_HOME_DIR$/lib/junit-4.10.jar!/org/junit/Assert.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="33" selection-start="325" selection-end="325" vertical-scroll-proportion="0.0">
+        <state line="1" column="45" selection-start="112" selection-end="112" vertical-scroll-proportion="-0.0">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/com/martindengler/proj/FIXSimple/FIXMessageTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="8" column="20" selection-start="220" selection-end="220" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/martindengler/proj/FIXSimple/FIXMessage.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="3" column="22" selection-start="91" selection-end="91" vertical-scroll-proportion="0.0795053">
-          <folding />
+        <state line="58" column="16" selection-start="1984" selection-end="1984" vertical-scroll-proportion="0.8172043">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -528,6 +585,7 @@
       </state>
       <state key="JdkListConfigurable.UI">
         <settings>
+          <last-edited>1.6</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
@@ -562,6 +620,7 @@
       </state>
       <state key="ProjectLibrariesConfigurable.UI">
         <settings>
+          <last-edited>junit</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
