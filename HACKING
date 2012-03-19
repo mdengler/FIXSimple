@@ -1,0 +1,138 @@
+HACKING
+=======
+
+This document incompletely covers areas of interest in the design, testing, limitations, coding style of FIXSimple.
+
+
+Design
+------
+
+The FIXSimple Acceptor application looks like this
+
+Acceptor -> ServerSocket.accept()
+ |
+ v
+ Executor
+  |
+  v
+  AcceptorSimpleClientHandler.call()
+   |
+   v
+   .handleState()
+
+handleState() implements a trivial state machine to respond as
+required to the incoming messages from Initiators.
+
+The lower-level incoming and outgoing queues are managed by FIXEndpoint, which AcceptorSimpleClientHandler extends:
+
+FIXEndpoint -----> .deliver() --> BlockingQueue --> FIXStream
+         ^                                            |
+         `-------- .receive() <-- BlockingQueue <----/
+
+
+
+
+Testing
+-------
+
+Besides running the code, an example test case is included in the
+test/com/martindengler/proj/FIXSimple/FIXMessageTest.java source file.
+
+
+
+Performance Testing
+-------------------
+
+Due to time limitations only basic _visualvm_, -Xprof, and -Xshowgc
+tools were used in an ad-hoc fashion with simple shell scripts
+(stress*.sh) to observe the performance behaviour.  Minor fixups were
+done.  Future directions include:
+
+ - multiple-machine load simulations
+ - oprofile usage
+ - tweak Acceptor.ThreadPool parameteres
+ - tune JVM heap size parameters (limitation of 32 JVMs on 4GB machine
+   was noticed, but this should be higher)
+ - tune open files / resource limits: core_pipe_limit overruns were
+   noted
+ - consider architectural changes like spawing multiple JVMs
+   ahead-of-time to handle many clients
+
+
+Limitations
+-----------
+
+There are many limitations of the architecture.  Most fundamentally,
+the client and server are single-process.  A re-architecture to a
+multi-process client, and its associated changes, would lead to a more
+graceful degradation of performance as load was spread out over
+multiple server processes.  The complexity of actually managing the
+incoming order flow would have to be addressed, perhaps by adding a
+layer of concentrators "behind" the Acceptor servers.  The
+concentrators would hand off messages to exchange fateways and manage
+inventory.  Especially for inventory management the concentrators
+could actually be more distributed than the Acceptors to handle the
+increased calculation load (whereas the Acceptors are filehandle /
+network port constrained).
+
+
+Coding Style
+------------
+
+I have attempted to follow the Sun Java Coding standards from
+[http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html#styleguide]
+.  Compliance is very spotty due to my enthusiasm for getting the code
+done.
+
+In particular, these areas require review:
+
+- TODO: document type-safety of FIXMessage getters & setters and
+  future directions (e.g., consider a typesafe message.getOrdCapacity)
+
+- TOOD: automate enum creation process - 4.2-spec enum classes were
+  hand generated using emacs macros; to reduce errors and improve
+  maintainability this should be changed to generate code from
+  FIXWiki, thus improving the documentation for the community as well
+
+- TODO: many obvious inefficiences remain (for example, string copying
+  is profligate) - a full catalog and profiling review will be
+  beneficial
+
+- TODO: automated profiling to establish baselines will enable
+  performance improvement tracking over time
+
+- TODO: a review of the Best Practices at
+  [http://www.odi.ch/prog/design/newbies.php#10] and
+  [http://zguide.zeromq.org/page:all#Why-We-Needed-MQ] suggests many
+  architectural directions
+
+- TODO: ensure getters are consistently named; getFoo() or foo() - the
+  java libraries, even "newer" ones such as java.util.concurrent and
+  enums, are inconsistent about prefering "getFoo()" vs. "foo()" for
+  getters.  We should be as consistent as reasonable in the code.
+
+- TODO: putM -> put : due to an oversight only noticed when doing
+  documentation, an intended override of "TreeMap.put" in FIXMessage
+  was not done, and the method overloads named "putM" were left in the
+  code.  This should be removed.
+
+- TODO: ensure use of int vs Integer is sensible and consistent
+
+- TODO: ensure System.err.println/format calls are removed where
+  appropriate; a proper logging framework may be judiciously used
+
+- TODO: sanity check design vs. quickfix/j: a competitive review of
+  style and architecture of QuickFix/J could be done to highlight
+  areas of improvement
+
+- TODO: normalise code to 80 char line length - inconsistencies were
+  noted in the final code review
+
+- TODO: write tests - due to lack of time only an example set of tests
+  were produced, but automated test suites usint JUnit 4 or TestNG
+  should be constructed
+
+- TODO: IDEA IDE launcher - simple shell scripts were delivered
+  instead of the requested IDE launchers
+
+
