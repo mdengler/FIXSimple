@@ -1,0 +1,1 @@
+java -classpath ./dist/FIXSimple-20120319.jar com.martindengler.proj.FIXSimple.Initiator
