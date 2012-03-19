@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2012 Martin Dengler <martin@martindengler.com>
+ *
+ * Licensed under the GNU GPL v3+; see LICENSE file
+ *
+ */
+
 package com.martindengler.proj.FIXSimple;
 
 import com.martindengler.proj.FIXSimple.spec.*;
@@ -8,6 +15,60 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+
+/**
+ * The <code>FIXMessage</class> represents a FIX 4.2 message of
+ * ordered key, value pairs.
+ *
+ * <p>
+ *
+ * FIX messages are strings of ISO-8895-1-encoded text delimited by
+ * the <code>SOH</code> (ASCII 0x01) character.
+ *
+ * <p>
+ *
+ * Because FIX messages should adhere to the FIX specification,
+ * factory methods instead of constructors exist to create
+ * FIXMessages:
+ *
+ * <p><blockquote><pre>
+ *     FIXMessage message = FIXMessage.factory(MsgType.LOGON);
+ * </pre></blockquote><p>
+ *
+ * FIXMessages should be treated as immutable objects.  To create
+ * "mutate" a FIXMessage, call <code>put</code> and use the return
+ * value instead of the original object:
+ *
+ * <p><blockquote><pre>
+ *     import com.martindengler.proj.FIXSimple.specs.MsgType;
+ *     import com.martindengler.proj.FIXSimple.specs.Tag;
+ *     FIXMessage message = FIXMessage.factory(MsgType.LOGON)
+ *                              .put(Tag.CLORDID,    "ORD27181828")
+ *                              .put(Tag.ORDSTATUS,  OrdStatus.NEW)
+ *                              .put(Tag.ORDERQTY,   "10000")
+ *                              ...
+ *                          ;
+ * </pre></blockquote><p>
+ *
+ * To send/receive <code>FIXMessage</code> objects, see
+ * <code>FIXEndpoint</code>.
+ *
+ * <p>
+ *
+ * To add / interrogate key/value pairs, see <code>Tag</code> and the
+ * <code>enum</code> classes in
+ * <code>com.martindengler.proj.FIXSimple.specs</code>
+ *
+ * <p>
+ *
+ * @author  Martin Dengler
+ * @version %I%, %G%
+ * @see     java.util.TreeMap
+ * @see     com.martindengler.proj.FIXSimple.specs.MsgType
+ * @see     com.martindengler.proj.FIXSimple.specs.Tag
+ * @see     com.martindengler.proj.FIXSimple.specs
+ *
+ */
 
 public class FIXMessage extends TreeMap<Tag, String> {
 
@@ -20,13 +81,11 @@ public class FIXMessage extends TreeMap<Tag, String> {
         .getBytes(ISO_8859_1);
 
 
-
     private int checksum = 0;
 
-    private boolean dontRecalcValues = false; // when we read messages from the wire, we don't want to recalc values
     private byte[] wireBytes; //when this instance was made from the wire rather than built up programmatically
 
-    private FIXMessage() {};  //immutable; TODO: actually do this properly
+    private FIXMessage() {}  //immutable; FUTURE: do immutability completely
 
 
 
@@ -34,7 +93,7 @@ public class FIXMessage extends TreeMap<Tag, String> {
         FIXMessage message = new FIXMessage()
             .putM(Tag.BEGINSTRING,     "FIX.4.2")
             //    Tag.BODYLENGTH       calculated later
-            .putM(Tag.MSGTYPE,         messageType.getCode().toString())
+            .putM(Tag.MSGTYPE,         messageType.getCode())
             //    Tag.SENDERCOMPID     set later
             //    Tag.TARGETCOMPID     set later
             //    Tag.MSGSEQNUM,       calculated later
@@ -45,7 +104,7 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
 
     /**
-     * validates that the message conforms to the FIX spec.
+     * Checks that the message conforms to the FIX spec.
      *
      * In particular, returns false unless:
      * 1) BodyLength tag presence and contents are valid
@@ -54,6 +113,11 @@ public class FIXMessage extends TreeMap<Tag, String> {
      *
      * Does NOT validate required tag presence and/or contents based on
      * MsgType or business rules for tag contents.
+     *
+     *  @param message the FIXMessage instance to validate
+     *
+     *  @return true if the message is valid according to the logic
+     *          mentioned above
      */
     public static boolean validate (FIXMessage message) {
         if (!(message.containsKey(Tag.BODYLENGTH)
@@ -71,6 +135,7 @@ public class FIXMessage extends TreeMap<Tag, String> {
 
     /**
      * Parses the message from a string using a custom delimiter
+     *
      */
     public static FIXMessage factory(String wireBytesAsString, String delimiter, Boolean recalculateValues) {
 
@@ -115,7 +180,6 @@ public class FIXMessage extends TreeMap<Tag, String> {
     public static FIXMessage fromWire(byte[] wireBytes) {
         FIXMessage message = factory(wireBytes, SOH_byte, false);
         message.wireBytes = wireBytes;
-        message.dontRecalcValues = true;
         return message;
     }
 

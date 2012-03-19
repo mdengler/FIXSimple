@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2012 Martin Dengler <martin@martindengler.com>
+ *
+ * Licensed under the GNU GPL v3+; see LICENSE file
+ *
+ */
+
 package com.martindengler.proj.FIXSimple;
 
 import java.io.IOException;
@@ -15,6 +22,21 @@ import java.util.concurrent.TimeUnit;
 
 
 
+/**
+ * <code>FIXStream</code> encapulates a stream of
+ * <code>FIXMessage</code>s going to / from a <code>Reader</code> /
+ * <code>Writer</code> endpoint.
+ *
+ * <p>
+ *
+ * FIXStream ties together <code>FIXStreamInputHandler</code> and
+ * <code>FIXStreamOutputHandler</code> to read / write the bytes.
+ *
+ * @author  Martin Dengler
+ * @see     com.martindengler.proj.FIXSimple.FIXMessage
+ * @see     com.martindengler.proj.FIXSimple.FIXStreamInputHandler
+ * @see     com.martindengler.proj.FIXSimple.FIXStreamOutputHandler
+ */
 public class FIXStream {
 
     public enum State {

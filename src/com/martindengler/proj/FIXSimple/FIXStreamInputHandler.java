@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2012 Martin Dengler <martin@martindengler.com>
+ *
+ * Licensed under the GNU GPL v3+; see LICENSE file
+ *
+ */
+
 package com.martindengler.proj.FIXSimple;
 
 import com.martindengler.proj.FIXSimple.spec.Tag;
@@ -10,6 +17,16 @@ import java.util.concurrent.Callable;
 import static com.martindengler.proj.FIXSimple.FIXMessage.*;
 
 
+/**
+ * <code>FIXStreamInputHandler</code> implements the reading of
+ * <code>FIXMessage</code>-compatible bytes from a
+ * otherwise-undelimited stream of bytes using a <code>Reader</code>
+ * and a simple <code>Callable</code> interface.
+ *
+ * @author  Martin Dengler
+ * @see     java.util.concurrent.Callable
+ * @see     java.util.Reader
+ */
 public class FIXStreamInputHandler implements Callable<Object> {
 
     private FIXStream parent;

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2012 Martin Dengler <martin@martindengler.com>
+ *
+ * Licensed under the GNU GPL v3+; see LICENSE file
+ *
+ */
+
 package com.martindengler.proj.FIXSimple;
 
 
@@ -11,7 +18,11 @@ import java.util.concurrent.BlockingQueue;
 
 
 /**
- * Convenience class for Initiators
+ * <code>FIXEndpoint</code> provides <code>deliver</code> and
+ * <code>receive</code> methods to ease implementation of
+ * multi-threaded clients and servers.
+ *
+ * @author  Martin Dengler
  */
 
 public abstract class FIXEndpoint {
@@ -94,7 +105,7 @@ public abstract class FIXEndpoint {
 
 
     /**
-     * TODO: document that this WILL block
+     * TODO: properly document that this WILL block
      */
     public FIXMessage receive() {
         if (!this.connected)

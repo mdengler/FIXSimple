@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2012 Martin Dengler <martin@martindengler.com>
+ *
+ * Licensed under the GNU GPL v3+; see LICENSE file
+ *
+ */
+
 package com.martindengler.proj.FIXSimple;
 
 import java.io.IOException;
@@ -5,6 +12,15 @@ import java.io.Writer;
 import java.util.concurrent.Callable;
 
 
+/**
+ * <code>FIXStreamOutputHandler</code> is a simple state-aware wrapper
+ * around a <code>Writer</code> with error signaling and a simple
+ * <code>Callable</code> interface implementation.
+ *
+ * @author  Martin Dengler
+ * @see     java.util.concurrent.Callable
+ * @see     java.util.Writer
+ */
 public class FIXStreamOutputHandler implements Callable<Object> {
 
     private FIXStream parent;
